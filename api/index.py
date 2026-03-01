@@ -1,7 +1,7 @@
 import sys
 import os
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 
 app = Flask(__name__)
 
@@ -13,6 +13,20 @@ try:
 except Exception as _e:
     import traceback as _tb
     _startup_error = _tb.format_exc()
+
+
+@app.route("/api/template", methods=["GET"])
+def download_template():
+    try:
+        data = generate_template()
+        return Response(
+            data,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=ESG_Data_Template.xlsx"}
+        )
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
 
 
 @app.route("/api/health", methods=["GET"])

@@ -685,3 +685,264 @@ def pct(part, whole):
     return 0.0 if whole == 0 else round((part / whole) * 100, 2)
 
 
+# ---------------------------------------------------------------------------
+# Template Generator
+# ---------------------------------------------------------------------------
+
+def generate_template():
+    """Create a multi-sheet ESG data-collection template Excel file."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    wb = Workbook()
+    # Styles
+    hdr_font = Font(bold=True, color="FFFFFF", size=11)
+    hdr_fill = PatternFill(start_color="0F766E", end_color="0F766E", fill_type="solid")
+    period_fill = PatternFill(start_color="155E75", end_color="155E75", fill_type="solid")
+    period_font = Font(bold=True, color="FFFFFF", size=11)
+    sub_fill = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")
+    sub_font = Font(bold=True, color="065F46", size=10)
+    note_font = Font(italic=True, color="6B7280", size=9)
+    center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    left_wrap = Alignment(vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style="thin", color="D1D5DB"),
+        right=Side(style="thin", color="D1D5DB"),
+        top=Side(style="thin", color="D1D5DB"),
+        bottom=Side(style="thin", color="D1D5DB"),
+    )
+
+    periods = ["FY 2024-25", "FY 2023-24", "FY 2022-23"]
+
+    def style_header(ws, row, col, value, fill=None, font=None):
+        cell = ws.cell(row=row, column=col, value=value)
+        cell.font = font or hdr_font
+        cell.fill = fill or hdr_fill
+        cell.alignment = center
+        cell.border = thin_border
+        return cell
+
+    def style_cell(ws, row, col, value=None, fmt=None):
+        cell = ws.cell(row=row, column=col, value=value)
+        cell.alignment = center
+        cell.border = thin_border
+        if fmt:
+            cell.number_format = fmt
+        return cell
+
+    def add_sample_locations(ws, start_row, loc_col, n=5):
+        examples = ["Site 1 - Mumbai", "Site 2 - Delhi", "Site 3 - Bangalore",
+                     "Site 4 - Chennai", "Site 5 - Pune"]
+        for i, loc in enumerate(examples[:n]):
+            cell = ws.cell(row=start_row + i, column=loc_col, value=loc)
+            cell.font = Font(italic=True, color="9CA3AF")
+            cell.alignment = left_wrap
+            cell.border = thin_border
+
+    def auto_width(ws):
+        for col_cells in ws.columns:
+            max_len = 0
+            col_letter = get_column_letter(col_cells[0].column)
+            for cell in col_cells:
+                if cell.value:
+                    max_len = max(max_len, len(str(cell.value)))
+            ws.column_dimensions[col_letter].width = min(max(max_len + 4, 14), 28)
+
+    # ===== Instructions Sheet =====
+    ws0 = wb.active
+    ws0.title = "Instructions"
+    ws0.sheet_properties.tabColor = "0F766E"
+
+    instructions = [
+        ("ESG AutoPilot - Data Collection Template", None, True),
+        ("", None, False),
+        ("HOW TO USE THIS TEMPLATE", None, True),
+        ("1. Each site / location fills in ONE copy of this file.", None, False),
+        ("2. Put your site name in the 'Location / Plant' column of each sheet.", None, False),
+        ("3. Fill in consumption data under the correct financial year columns.", None, False),
+        ("4. Do NOT change the sheet names or column headers.", None, False),
+        ("5. Leave cells blank or zero if a fuel type is not used at your site.", None, False),
+        ("6. Save the file as:  SiteName_ESG_Data.xlsx", None, False),
+        ("", None, False),
+        ("UPLOADING", None, True),
+        ("All site files can be uploaded together on the ESG AutoPilot dashboard.", None, False),
+        ("The system will automatically merge and process all locations.", None, False),
+        ("", None, False),
+        ("SHEETS IN THIS TEMPLATE", None, True),
+        ("Scope 1 Stationary Combustion  -  Boilers, generators, furnaces", None, False),
+        ("Scope 1 Mobile Combustion      -  Company-owned vehicles", None, False),
+        ("Scope 1 Fugitive Emissions     -  Refrigerant leaks & fire extinguishers", None, False),
+        ("Electricity                     -  Grid (NRE) and Renewable (RE) electricity", None, False),
+        ("", None, False),
+        ("SUPPORTED UNITS", None, True),
+        ("Fuel: KL (kilolitres), Kg, SCM (std cubic metres), Litres", None, False),
+        ("Electricity: kWh", None, False),
+        ("Refrigerants: Kg refilled", None, False),
+        ("Fire Extinguishers: Number of units (nos) refilled", None, False),
+        ("", None, False),
+        ("REPORTING PERIODS", None, True),
+        ("Use Indian Financial Year format: FY 2024-25, FY 2023-24, etc.", None, False),
+        ("You can add more FY columns by following the same pattern.", None, False),
+    ]
+    for i, (text, _, is_bold) in enumerate(instructions, 1):
+        cell = ws0.cell(row=i, column=1, value=text)
+        cell.font = Font(bold=is_bold, size=12 if is_bold else 10,
+                         color="0F766E" if is_bold else "374151")
+    ws0.column_dimensions["A"].width = 80
+
+    # ===== Scope 1 Stationary Combustion =====
+    ws1 = wb.create_sheet("Scope 1 Stationary Combustion")
+    ws1.sheet_properties.tabColor = "F59E0B"
+    fuels_stat = ["HSD (KL)", "Furnace Oil (KL)", "LDO (KL)",
+                  "Natural Gas (SCM)", "LPG (Kg)", "LSHS (KL)"]
+
+    row = 1
+    style_header(ws1, row, 1, "Location / Plant")
+    col = 2
+    for fy in periods:
+        style_header(ws1, row, col, fy, period_fill, period_font)
+        ws1.merge_cells(start_row=row, start_column=col,
+                        end_row=row, end_column=col + len(fuels_stat) - 1)
+        col += len(fuels_stat)
+
+    row = 2
+    style_header(ws1, row, 1, "")
+    col = 2
+    for _ in periods:
+        for fuel in fuels_stat:
+            style_header(ws1, row, col, fuel, sub_fill, sub_font)
+            col += 1
+
+    add_sample_locations(ws1, 3, 1, 5)
+    for r in range(3, 8):
+        for c in range(2, 2 + len(periods) * len(fuels_stat)):
+            style_cell(ws1, r, c, fmt="#,##0.00")
+    auto_width(ws1)
+
+    # ===== Scope 1 Mobile Combustion =====
+    ws2 = wb.create_sheet("Scope 1 Mobile Combustion")
+    ws2.sheet_properties.tabColor = "EF4444"
+    fuels_mob = ["HSD (KL)", "Petrol (KL)"]
+
+    row = 1
+    style_header(ws2, row, 1, "Location / Plant")
+    col = 2
+    for fy in periods:
+        style_header(ws2, row, col, fy, period_fill, period_font)
+        ws2.merge_cells(start_row=row, start_column=col,
+                        end_row=row, end_column=col + len(fuels_mob) - 1)
+        col += len(fuels_mob)
+
+    row = 2
+    style_header(ws2, row, 1, "")
+    col = 2
+    for _ in periods:
+        for fuel in fuels_mob:
+            style_header(ws2, row, col, fuel, sub_fill, sub_font)
+            col += 1
+
+    add_sample_locations(ws2, 3, 1, 5)
+    for r in range(3, 8):
+        for c in range(2, 2 + len(periods) * len(fuels_mob)):
+            style_cell(ws2, r, c, fmt="#,##0.000")
+    auto_width(ws2)
+
+    # ===== Scope 1 Fugitive Emissions =====
+    ws3 = wb.create_sheet("Scope 1 Fugitive Emissions")
+    ws3.sheet_properties.tabColor = "8B5CF6"
+
+    # Refrigerants section
+    refrigerants = ["R22 (kg)", "R134a (kg)", "R-407C (kg)", "R-404A (kg)",
+                    "R-410A (kg)", "R-407A (kg)", "R123 (kg)", "R32 (kg)", "R152a (kg)"]
+    fire_ext = ["1 Kg (nos)", "2 Kg (nos)", "2.5 Kg (nos)", "3 Kg (nos)",
+                "3.5 Kg (nos)", "4.5 Kg (nos)", "6 Kg (nos)", "9 Kg (nos)", "22.5 Kg (nos)"]
+
+    row = 1
+    ws3.cell(row=row, column=1, value="Refrigerant Gas Refills (kg)").font = Font(
+        bold=True, size=12, color="8B5CF6")
+
+    row = 2
+    style_header(ws3, row, 1, "Location / Plant")
+    col = 2
+    for ref in refrigerants:
+        style_header(ws3, row, col, ref + " refilled")
+        col += 1
+
+    add_sample_locations(ws3, 3, 1, 5)
+    for r in range(3, 8):
+        for c in range(2, 2 + len(refrigerants)):
+            style_cell(ws3, r, c, fmt="#,##0.00")
+
+    fug_note_row = 9
+    ws3.cell(row=fug_note_row, column=1,
+             value="Note: Enter quantity of refrigerant gas refilled (in kg), "
+                   "not the total charge.").font = note_font
+
+    # Fire extinguisher section
+    row = fug_note_row + 2
+    ws3.cell(row=row, column=1,
+             value="CO2 Fire Extinguisher Refills (nos)").font = Font(
+        bold=True, size=12, color="8B5CF6")
+
+    row += 1
+    style_header(ws3, row, 1, "Location / Plant")
+    col = 2
+    for fe in fire_ext:
+        style_header(ws3, row, col, fe)
+        col += 1
+
+    fe_data_start = row + 1
+    add_sample_locations(ws3, fe_data_start, 1, 5)
+    for r in range(fe_data_start, fe_data_start + 5):
+        for c in range(2, 2 + len(fire_ext)):
+            style_cell(ws3, r, c, fmt="#,##0")
+
+    fe_note_row = fe_data_start + 6
+    ws3.cell(row=fe_note_row, column=1,
+             value="Note: Enter number of extinguishers refilled, "
+                   "grouped by weight category.").font = note_font
+    auto_width(ws3)
+
+    # ===== Electricity =====
+    ws4 = wb.create_sheet("Electricity")
+    ws4.sheet_properties.tabColor = "3B82F6"
+
+    row = 1
+    style_header(ws4, row, 1, "Location / Plant")
+    col = 2
+    for fy in periods:
+        style_header(ws4, row, col, fy, period_fill, period_font)
+        ws4.merge_cells(start_row=row, start_column=col,
+                        end_row=row, end_column=col + 2)
+        col += 3
+
+    row = 2
+    style_header(ws4, row, 1, "")
+    col = 2
+    elec_subs = ["kWh", "NRE", "RE"]
+    for _ in periods:
+        for sub in elec_subs:
+            style_header(ws4, row, col, sub, sub_fill, sub_font)
+            col += 1
+
+    add_sample_locations(ws4, 3, 1, 5)
+    for r in range(3, 8):
+        for c in range(2, 2 + len(periods) * 3):
+            style_cell(ws4, r, c, fmt="#,##0")
+
+    elec_note_row = 9
+    ws4.cell(row=elec_note_row, column=1,
+             value="NRE = Non-Renewable (Grid) Electricity  |  "
+                   "RE = Renewable Electricity (Solar, Wind, Hydel, etc.)").font = note_font
+    ws4.cell(row=elec_note_row + 1, column=1,
+             value="Enter values in kWh. The 'kWh' column is total "
+                   "consumption; NRE + RE should equal kWh.").font = note_font
+    auto_width(ws4)
+
+    # Save to buffer
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+

@@ -50,6 +50,33 @@
     /* ---- LAYOUT ---- */
     .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
 
+    /* ---- TEMPLATE BANNER ---- */
+    .template-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #eff6ff 0%, #f0fdf9 100%);
+      border: 1px solid #93c5fd;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      gap: 16px;
+    }
+    .template-text {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .template-icon { font-size: 1.6rem; }
+    .template-text strong { display: block; color: #1e3a5f; font-size: .95rem; }
+    .template-sub { font-size: .82rem; color: #64748b; }
+    .btn-template {
+      white-space: nowrap;
+      background: linear-gradient(135deg,#0f766e,#155e75);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 10px 20px; font-size: .88rem; font-weight: 700;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .btn-template:hover { opacity: .88; }
+
     /* ---- UPLOAD ZONE ---- */
     #upload-section { margin-bottom: 28px; }
     .drop-zone {
@@ -212,10 +239,25 @@
 
   <!-- Upload Section -->
   <div id="upload-section">
+    <!-- Template Download Banner -->
+    <div class="template-banner">
+      <div class="template-text">
+        <span class="template-icon">📋</span>
+        <div>
+          <strong>Need a data collection template?</strong>
+          <span class="template-sub">Download the standard ESG template, fill one per site, then upload all together.</span>
+        </div>
+      </div>
+      <button class="btn-template" onclick="window.location.href='/api/template'">
+        ⬇ Download Template
+      </button>
+    </div>
+
     <div class="drop-zone" id="drop-zone">
       <div class="icon">📂</div>
       <h3>Upload your ESG data files</h3>
-      <p>Drag &amp; drop Excel (.xlsx / .xls) or CSV files here, or click to browse</p>
+      <p>Drag &amp; drop Excel (.xlsx / .xls) or CSV files here, or click to browse.<br>
+         <strong>Upload one file per site</strong> — all locations are merged automatically.</p>
       <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple />
     </div>
     <div id="file-list"></div>
