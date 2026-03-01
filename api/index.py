@@ -4,10 +4,8 @@ import json
 import pandas as pd
 import re
 from datetime import datetime
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 import os
-
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
 
@@ -689,17 +687,11 @@ def _pct(part, whole):
     return 0.0 if whole == 0 else round((part / whole) * 100, 2)
 
 
-@app.route("/", methods=["GET"])
-def index():
-    return send_from_directory(ROOT_DIR, "index.html")
-
-
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
 
 
-@app.route("/", methods=["POST"])
 @app.route("/api/process", methods=["POST"])
 def process_files():
     try:
