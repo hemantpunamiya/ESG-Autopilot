@@ -687,8 +687,21 @@ def _pct(part, whole):
     return 0.0 if whole == 0 else round((part / whole) * 100, 2)
 
 
+@app.route("/api/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
+
+
 @app.route("/api/process", methods=["POST"])
 def process_files():
+    try:
+        return _do_process()
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+
+
+def _do_process():
     files = request.files.getlist("files")
     if not files:
         return jsonify({"error": "No files uploaded"}), 400
