@@ -428,7 +428,7 @@ def energy_gj_from_row(row):
 
 def classify_headers(df):
     cl = {"location": [], "period": None, "fuels": {}, "qty": [], "other": []}
-    sample_blob = " ".join(df.astype(str).head(10).values.flatten().tolist()).lower()
+    sample_blob = " ".join(str(v) for v in df.astype(str).head(10).values.flatten().tolist()).lower()
     guessed_fuel = map_fuel_name(sample_blob, default=None)
 
     for col in df.columns:
@@ -481,11 +481,13 @@ def process_table_block(df, parent_period, sheet_context=""):
         df = df.iloc[:cutoff].reset_index(drop=True)
 
     df = df.dropna(how='all', axis=1)
+    df.columns = [str(c) for c in df.columns]
     if df.empty:
         return []
 
     top_blob = " ".join(
-        str(v) for v in df.head(3).fillna("").values.flatten().tolist() if str(v).strip()
+        str(v) for v in df.head(3).astype(str).values.flatten().tolist()
+        if str(v).strip() and str(v).lower() != "nan"
     ).lower()
     if re.search(r"co.?2e emissions|emission factors|scope 1 consolidated ghg emissions", top_blob):
         return []
