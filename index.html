@@ -3,126 +3,149 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ESG AutoPilot — Enterprise</title>
+  <title>ESG AutoPilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #F3EDE4;
+      --bg-card: #FAFAF7;
+      --bg-white: #FFFFFF;
+      --text: #1A1A1A;
+      --text-mid: #5C5C5C;
+      --text-light: #8A8A7A;
+      --accent: #D4764E;
+      --accent-light: #F5E6DC;
+      --border: #E2DDD5;
+      --border-light: #EDE9E1;
+      --olive: #5A7247;
+      --olive-light: #E8EDDF;
+      --black: #1A1A1A;
+      --radius: 18px;
+      --radius-sm: 12px;
+      --radius-pill: 999px;
+    }
+
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background:
-        radial-gradient(circle at 8% 8%,  rgba(16,185,129,.10) 0%, transparent 30%),
-        radial-gradient(circle at 90% 12%, rgba(14,116,144,.10) 0%, transparent 35%),
-        #f4f7fb;
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
       min-height: 100vh;
-      color: #0f172a;
+      color: var(--text);
     }
 
     /* ---- NAV ---- */
     nav {
-      background: #fff;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 0 24px;
+      background: var(--bg-white);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      height: 56px;
+      gap: 12px;
+      height: 60px;
       position: sticky; top: 0; z-index: 100;
     }
     nav .logo {
-      font-size: 1.2rem;
-      font-weight: 800;
-      background: linear-gradient(135deg,#0f766e,#155e75);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: var(--text);
+      letter-spacing: -.01em;
     }
     nav .badge {
-      font-size: .7rem;
-      background: #e0fdf4;
-      color: #065f46;
-      border: 1px solid #6ee7b7;
-      border-radius: 999px;
-      padding: 2px 8px;
-      font-weight: 700;
-      letter-spacing: .04em;
+      font-size: .68rem;
+      background: var(--black);
+      color: #fff;
+      border-radius: var(--radius-pill);
+      padding: 3px 10px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
     }
 
     /* ---- LAYOUT ---- */
-    .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
 
     /* ---- TEMPLATE BANNER ---- */
     .template-banner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(135deg, #eff6ff 0%, #f0fdf9 100%);
-      border: 1px solid #93c5fd;
-      border-radius: 14px;
-      padding: 16px 20px;
-      margin-bottom: 16px;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin-bottom: 18px;
       gap: 16px;
     }
     .template-text {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 14px;
     }
-    .template-icon { font-size: 1.6rem; }
-    .template-text strong { display: block; color: #1e3a5f; font-size: .95rem; }
-    .template-sub { font-size: .82rem; color: #64748b; }
+    .template-icon {
+      width: 42px; height: 42px;
+      background: var(--olive-light);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .template-text strong { display: block; color: var(--text); font-size: .92rem; font-weight: 600; }
+    .template-sub { font-size: .8rem; color: var(--text-light); margin-top: 2px; }
     .btn-template {
       white-space: nowrap;
-      background: linear-gradient(135deg,#0f766e,#155e75);
-      color: #fff; border: none; border-radius: 10px;
-      padding: 10px 20px; font-size: .88rem; font-weight: 700;
-      cursor: pointer; transition: opacity .2s;
+      background: var(--black);
+      color: #fff; border: none; border-radius: var(--radius-pill);
+      padding: 10px 22px; font-size: .85rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+      font-family: inherit;
     }
-    .btn-template:hover { opacity: .88; }
+    .btn-template:hover { background: #333; }
 
     /* ---- UPLOAD ZONE ---- */
     #upload-section { margin-bottom: 28px; }
     .drop-zone {
-      border: 2px dashed #a7c4d8;
-      border-radius: 16px;
-      background: #fff;
-      padding: 48px 24px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-white);
+      padding: 52px 24px;
       text-align: center;
       cursor: pointer;
       transition: border-color .2s, background .2s;
     }
     .drop-zone:hover, .drop-zone.drag-over {
-      border-color: #0f766e;
-      background: #f0fdf9;
+      border-color: var(--accent);
+      background: var(--accent-light);
     }
-    .drop-zone .icon { font-size: 2.5rem; margin-bottom: 12px; }
-    .drop-zone h3 { font-size: 1.1rem; font-weight: 700; color: #1e3a5f; margin-bottom: 6px; }
-    .drop-zone p  { font-size: .88rem; color: #64748b; }
+    .drop-zone .icon { font-size: 2.5rem; margin-bottom: 14px; }
+    .drop-zone h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .drop-zone p  { font-size: .85rem; color: var(--text-light); line-height: 1.6; }
     .drop-zone input[type=file] { display: none; }
 
     #file-list { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
     .file-chip {
-      background: #e0fdf4; border: 1px solid #6ee7b7;
-      color: #065f46; border-radius: 999px;
-      font-size: .82rem; padding: 4px 12px; font-weight: 600;
+      background: var(--olive-light); border: 1px solid #C8D3B8;
+      color: var(--olive); border-radius: var(--radius-pill);
+      font-size: .8rem; padding: 5px 14px; font-weight: 600;
     }
 
     .btn-primary {
       display: inline-flex; align-items: center; gap: 8px;
       margin-top: 16px;
-      background: linear-gradient(135deg,#0f766e,#155e75);
-      color: #fff; border: none; border-radius: 10px;
-      padding: 11px 24px; font-size: .95rem; font-weight: 700;
-      cursor: pointer; transition: opacity .2s;
+      background: var(--black);
+      color: #fff; border: none; border-radius: var(--radius-pill);
+      padding: 12px 28px; font-size: .9rem; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+      font-family: inherit;
     }
-    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-primary:hover:not(:disabled) { opacity: .9; }
+    .btn-primary:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-primary:hover:not(:disabled) { background: #333; }
 
     /* ---- SPINNER ---- */
-    #spinner {
-      display: none; text-align: center; padding: 40px;
-    }
+    #spinner { display: none; text-align: center; padding: 48px; }
     .spinner-ring {
       display: inline-block; width: 44px; height: 44px;
-      border: 4px solid #d1fae5;
-      border-top-color: #0f766e;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin .8s linear infinite;
     }
@@ -131,107 +154,138 @@
     /* ---- WARNINGS ---- */
     #warnings-box {
       display: none;
-      background: #fffbeb; border: 1px solid #fcd34d;
-      border-radius: 10px; padding: 12px 16px;
-      margin-bottom: 16px; font-size: .85rem; color: #78350f;
+      background: #FEF7EC; border: 1px solid #EAD5A8;
+      border-radius: var(--radius-sm); padding: 14px 18px;
+      margin-bottom: 16px; font-size: .84rem; color: #7A5C28;
     }
 
     /* ---- HERO ---- */
     .hero {
-      background: linear-gradient(135deg,#0f766e 0%,#155e75 100%);
-      color: #fff; padding: 18px 22px; border-radius: 16px;
-      margin-bottom: 20px;
+      background: var(--black);
+      color: #fff; padding: 22px 26px; border-radius: var(--radius);
+      margin-bottom: 22px;
     }
-    .hero h2 { font-size: 1.35rem; margin-bottom: 4px; }
-    .hero p  { opacity: .9; font-size: .9rem; }
+    .hero h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem; margin-bottom: 4px; font-weight: 400;
+    }
+    .hero p { opacity: .7; font-size: .88rem; }
 
     /* ---- TABS ---- */
     .tab-bar {
-      display: flex; gap: 4px; margin-bottom: 20px;
-      background: #e8eef5; border-radius: 10px; padding: 4px;
+      display: flex; gap: 6px; margin-bottom: 22px;
+      flex-wrap: wrap;
     }
     .tab-btn {
-      flex: 1; padding: 8px 4px; border: none; background: none;
-      border-radius: 7px; font-size: .82rem; font-weight: 600;
-      color: #44617f; cursor: pointer; transition: background .15s, color .15s;
-      white-space: nowrap;
+      padding: 8px 18px; border: 1px solid var(--border); background: var(--bg-white);
+      border-radius: var(--radius-pill); font-size: .82rem; font-weight: 600;
+      color: var(--text-mid); cursor: pointer; transition: all .15s;
+      white-space: nowrap; font-family: inherit;
     }
-    .tab-btn.active { background: #fff; color: #0f766e; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    .tab-btn:hover { border-color: var(--text-mid); }
+    .tab-btn.active {
+      background: var(--black); color: #fff;
+      border-color: var(--black);
+    }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
     /* ---- CARDS ---- */
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; margin-bottom: 20px; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 14px; margin-bottom: 22px; }
     .card {
-      background: #fff; border: 1px solid #d8e2ee;
-      border-radius: 14px; padding: 16px;
-      box-shadow: 0 4px 12px rgba(16,24,40,.05);
+      background: var(--bg-white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
     }
     .card .label {
-      font-size: .78rem; color: #375a7f; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
+      font-size: .72rem; color: var(--text-light); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
     }
-    .card .value { font-size: 1.45rem; font-weight: 800; color: #0f172a; }
-    .card .delta { font-size: .78rem; color: #1d4ed8; margin-top: 4px; }
-    .card.sub { margin-left: 16px; border-left: 3px solid #6ee7b7; }
+    .card .value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem; font-weight: 400; color: var(--text);
+    }
+    .card .delta {
+      font-size: .76rem; color: var(--accent);
+      margin-top: 6px; font-weight: 600;
+    }
+    .card.sub { border-left: 3px solid var(--olive); }
 
     /* ---- CHART CANVAS ---- */
     .chart-wrap {
-      background: #fff; border: 1px solid #d8e2ee; border-radius: 14px;
-      padding: 20px; margin-bottom: 16px;
-      box-shadow: 0 4px 12px rgba(16,24,40,.04);
+      background: var(--bg-white); border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px; margin-bottom: 16px;
     }
-    .chart-wrap h4 { font-size: .88rem; color: #44617f; font-weight: 700; margin-bottom: 14px; }
+    .chart-wrap h4 {
+      font-size: .88rem; color: var(--text-mid);
+      font-weight: 600; margin-bottom: 16px;
+    }
     .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
     /* ---- TABLES ---- */
     .tbl-wrap {
-      background: #fff; border: 1px solid #d8e2ee; border-radius: 14px;
+      background: var(--bg-white); border: 1px solid var(--border);
+      border-radius: var(--radius);
       overflow: hidden; margin-bottom: 16px;
-      box-shadow: 0 4px 12px rgba(16,24,40,.04);
     }
-    .tbl-wrap h4 { font-size: .88rem; color: #44617f; font-weight: 700; padding: 14px 16px; border-bottom: 1px solid #e8eef5; }
+    .tbl-wrap h4 {
+      font-size: .88rem; color: var(--text-mid); font-weight: 600;
+      padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+    }
     table { width: 100%; border-collapse: collapse; font-size: .82rem; }
     thead th {
-      background: #f8fafc; text-align: left;
-      padding: 9px 14px; font-weight: 700;
-      color: #374151; border-bottom: 1px solid #e8eef5;
+      background: var(--bg-card); text-align: left;
+      padding: 10px 16px; font-weight: 600;
+      color: var(--text-mid); border-bottom: 1px solid var(--border-light);
       white-space: nowrap;
     }
-    tbody td { padding: 8px 14px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+    tbody td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); color: var(--text); }
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: #f8fafc; }
+    tbody tr:hover td { background: #FAF8F4; }
 
     /* ---- DOWNLOAD BTN ---- */
     .btn-dl {
       display: inline-flex; align-items: center; gap: 8px;
-      background: #fff; border: 1px solid #0f766e; color: #0f766e;
-      border-radius: 10px; padding: 9px 20px;
-      font-size: .9rem; font-weight: 700; cursor: pointer;
-      transition: background .15s;
+      background: var(--bg-white); border: 1px solid var(--black); color: var(--black);
+      border-radius: var(--radius-pill); padding: 10px 22px;
+      font-size: .85rem; font-weight: 600; cursor: pointer;
+      transition: all .15s; font-family: inherit;
     }
-    .btn-dl:hover { background: #f0fdf9; }
+    .btn-dl:hover { background: var(--black); color: #fff; }
 
     /* ---- INFO BOX ---- */
     .info-box {
-      background: #eff6ff; border: 1px solid #bfdbfe;
-      border-radius: 10px; padding: 12px 16px;
-      font-size: .85rem; color: #1e40af; margin-bottom: 12px;
+      background: var(--olive-light); border: 1px solid #C8D3B8;
+      border-radius: var(--radius-sm); padding: 12px 16px;
+      font-size: .84rem; color: var(--olive); margin-bottom: 14px;
     }
 
     /* ---- SCROLLABLE AUDIT ---- */
     .audit-scroll { max-height: 480px; overflow-y: auto; }
 
+    /* ---- TYPE BADGES IN TABLE ---- */
+    .badge-actual {
+      background: var(--olive-light); color: var(--olive);
+      padding: 3px 10px; border-radius: var(--radius-pill);
+      font-size: .72rem; font-weight: 700;
+    }
+    .badge-proxy {
+      background: #FEF3C7; color: #92400E;
+      padding: 3px 10px; border-radius: var(--radius-pill);
+      font-size: .72rem; font-weight: 700;
+    }
+
     @media (max-width: 640px) {
       .chart-row { grid-template-columns: 1fr; }
-      .tab-btn { font-size: .72rem; padding: 7px 3px; }
+      .tab-btn { font-size: .74rem; padding: 7px 12px; }
+      .template-banner { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
 <body>
 
 <nav>
-  <span class="logo">💎 ESG AutoPilot</span>
+  <span class="logo">ESG AutoPilot</span>
   <span class="badge">Enterprise</span>
 </nav>
 
@@ -249,7 +303,7 @@
         </div>
       </div>
       <button class="btn-template" onclick="window.location.href='/api/template'">
-        ⬇ Download Template
+        Download Template
       </button>
     </div>
 
@@ -262,14 +316,14 @@
     </div>
     <div id="file-list"></div>
     <button class="btn-primary" id="process-btn" disabled>
-      ⚡ Process Files
+      Process Files
     </button>
   </div>
 
   <!-- Spinner -->
   <div id="spinner">
     <div class="spinner-ring"></div>
-    <p style="margin-top:12px;color:#64748b;font-size:.9rem;">Processing your ESG data&hellip;</p>
+    <p style="margin-top:14px;color:var(--text-light);font-size:.9rem;">Processing your ESG data&hellip;</p>
   </div>
 
   <!-- Results -->
@@ -361,8 +415,8 @@
 
     <!-- Audit Trail -->
     <div class="tab-panel" id="tab-audit">
-      <div style="margin-bottom:12px;">
-        <button class="btn-dl" id="download-btn">📥 Download Audit Trail (.xlsx)</button>
+      <div style="margin-bottom:14px;">
+        <button class="btn-dl" id="download-btn">Download Audit Trail (.xlsx)</button>
       </div>
       <div class="tbl-wrap">
         <h4>Full Audit Trail</h4>
@@ -405,7 +459,7 @@ function addFiles(newFiles) {
 
 function renderFileChips() {
   fileList.innerHTML = selectedFiles.map(f =>
-    `<span class="file-chip">📄 ${f.name}</span>`
+    `<span class="file-chip">${f.name}</span>`
   ).join('');
   processBtn.disabled = selectedFiles.length === 0;
 }
@@ -445,9 +499,21 @@ processBtn.addEventListener('click', async () => {
 });
 
 function fmt(n, dec=2) {
-  if (n == null) return '—';
+  if (n == null) return '\u2014';
   return Number(n).toLocaleString('en-IN', {minimumFractionDigits: dec, maximumFractionDigits: dec});
 }
+
+// ---------- Chart palette ----------
+const PALETTE = {
+  dark:   '#1A1A1A',
+  accent: '#D4764E',
+  olive:  '#5A7247',
+  warm:   '#C4956A',
+  sand:   '#D4C5A9',
+  sage:   '#8FA87E',
+  clay:   '#B07C62',
+  slate:  '#7A8B8F',
+};
 
 function renderResults(data) {
   excelB64 = data.excel_b64;
@@ -455,7 +521,7 @@ function renderResults(data) {
   // Warnings
   const wb = document.getElementById('warnings-box');
   if (data.warnings && data.warnings.length) {
-    wb.innerHTML = '<b>⚠ Warnings</b><ul style="margin-top:6px;padding-left:18px;">' +
+    wb.innerHTML = '<b>Warnings</b><ul style="margin-top:6px;padding-left:18px;">' +
       data.warnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
     wb.style.display = 'block';
   }
@@ -494,7 +560,7 @@ function renderResults(data) {
   const tbl = document.querySelector('#tbl-yearly tbody');
   tbl.innerHTML = trend.map(r => `<tr>
     <td>${r.Period}</td>
-    <td><span style="background:${r['Data Type']==='Proxy'?'#fef9c3':'#dcfce7'};padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;">${r['Data Type']}</span></td>
+    <td><span class="${r['Data Type']==='Proxy'?'badge-proxy':'badge-actual'}">${r['Data Type']}</span></td>
     <td>${fmt(r['Total Emissions (tCO2e)'])}</td>
     <td>${fmt(r['Scope 1'])}</td>
     <td>${fmt(r['Scope 2'])}</td>
@@ -514,19 +580,19 @@ function renderResults(data) {
       data: {
         labels,
         datasets: [
-          { label: 'Total', data: trend.map(r => r['Total Emissions (tCO2e)']), borderColor: '#0f766e', tension: .3, fill: false },
-          { label: 'Scope 1', data: trend.map(r => r['Scope 1']),  borderColor: '#f59e0b', tension: .3, fill: false },
-          { label: 'Scope 2', data: trend.map(r => r['Scope 2']),  borderColor: '#3b82f6', tension: .3, fill: false },
+          { label: 'Total', data: trend.map(r => r['Total Emissions (tCO2e)']), borderColor: PALETTE.dark, backgroundColor: PALETTE.dark, tension: .35, fill: false, pointRadius: 4 },
+          { label: 'Scope 1', data: trend.map(r => r['Scope 1']),  borderColor: PALETTE.accent, backgroundColor: PALETTE.accent, tension: .35, fill: false, pointRadius: 4 },
+          { label: 'Scope 2', data: trend.map(r => r['Scope 2']),  borderColor: PALETTE.olive, backgroundColor: PALETTE.olive, tension: .35, fill: false, pointRadius: 4 },
         ]
       },
-      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } } }
     });
 
     chartInstances['chart-energy'] = new Chart(document.getElementById('chart-energy'), {
       type: 'bar',
       data: {
         labels,
-        datasets: [{ label: 'Energy (GJ)', data: trend.map(r => r['Energy Usage (GJ)']), backgroundColor: '#6ee7b7' }]
+        datasets: [{ label: 'Energy (GJ)', data: trend.map(r => r['Energy Usage (GJ)']), backgroundColor: PALETTE.sand, borderRadius: 6 }]
       },
       options: { responsive: true, plugins: { legend: { display: false } } }
     });
@@ -545,9 +611,10 @@ function renderResults(data) {
       data: {
         labels: scope.map(r => r.Scope),
         datasets: [{ data: scope.map(r => r['Total Emissions (tCO2e)']),
-          backgroundColor: ['#0f766e','#3b82f6','#f59e0b','#ef4444','#8b5cf6'] }]
+          backgroundColor: [PALETTE.dark, PALETTE.olive, PALETTE.accent, PALETTE.warm, PALETTE.slate],
+          borderWidth: 2, borderColor: '#FAFAF7' }]
       },
-      options: { responsive: true, plugins: { legend: { position: 'right' } } }
+      options: { responsive: true, cutout: '55%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 14 } } } }
     });
   }
 
@@ -558,7 +625,7 @@ function renderResults(data) {
     data: {
       labels: ['Renewable', 'Non-Renewable'],
       datasets: [{ data: [k.renewable_gj, k.non_renewable_gj],
-        backgroundColor: ['#6ee7b7','#fca5a5'] }]
+        backgroundColor: [PALETTE.olive, PALETTE.accent], borderRadius: 6 }]
     },
     options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } } }
   });
