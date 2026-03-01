@@ -7,6 +7,8 @@ from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 import os
 
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
@@ -688,6 +690,10 @@ def _pct(part, whole):
 
 
 @app.route("/", methods=["GET"])
+def index():
+    return send_from_directory(ROOT_DIR, "index.html")
+
+
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
