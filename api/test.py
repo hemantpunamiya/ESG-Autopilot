@@ -1,5 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import sys
+import os
 
 
 class handler(BaseHTTPRequestHandler):
@@ -10,28 +12,23 @@ class handler(BaseHTTPRequestHandler):
 
         results = {}
 
+        # Check what files exist in the api/ directory
+        api_dir = os.path.dirname(os.path.abspath(__file__))
+        results["api_dir"] = api_dir
         try:
-            import flask
-            results["flask"] = "ok - " + flask.__version__
+            results["files_in_api_dir"] = os.listdir(api_dir)
         except Exception as e:
-            results["flask"] = "FAIL: " + str(e)
+            results["files_in_api_dir"] = "ERROR: " + str(e)
 
+        # Try importing logic.py
         try:
-            import pandas
-            results["pandas"] = "ok - " + pandas.__version__
+            sys.path.insert(0, api_dir)
+            import logic
+            results["logic_import"] = "ok"
+            results["logic_has_pd"] = hasattr(logic, "pd")
+            results["logic_has_EF_DATABASE"] = hasattr(logic, "EF_DATABASE")
         except Exception as e:
-            results["pandas"] = "FAIL: " + str(e)
-
-        try:
-            import openpyxl
-            results["openpyxl"] = "ok - " + openpyxl.__version__
-        except Exception as e:
-            results["openpyxl"] = "FAIL: " + str(e)
-
-        try:
-            import io, base64, re, os
-            results["stdlib"] = "ok"
-        except Exception as e:
-            results["stdlib"] = "FAIL: " + str(e)
+            import traceback
+            results["logic_import"] = "FAIL: " + traceback.format_exc()
 
         self.wfile.write(json.dumps(results, indent=2).encode())
