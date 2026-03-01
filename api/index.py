@@ -167,4 +167,3 @@ def _do_process():
     })
 
 
-handler = app
