@@ -687,11 +687,13 @@ def _pct(part, whole):
     return 0.0 if whole == 0 else round((part / whole) * 100, 2)
 
 
+@app.route("/", methods=["GET"])
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok"})
 
 
+@app.route("/", methods=["POST"])
 @app.route("/api/process", methods=["POST"])
 def process_files():
     try:
