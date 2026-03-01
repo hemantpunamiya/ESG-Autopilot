@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESG AutoPilot — Enterprise</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(circle at 8% 8%,  rgba(16,185,129,.10) 0%, transparent 30%),
+        radial-gradient(circle at 90% 12%, rgba(14,116,144,.10) 0%, transparent 35%),
+        #f4f7fb;
+      min-height: 100vh;
+      color: #0f172a;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 56px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    nav .logo {
+      font-size: 1.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg,#0f766e,#155e75);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    nav .badge {
+      font-size: .7rem;
+      background: #e0fdf4;
+      color: #065f46;
+      border: 1px solid #6ee7b7;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-weight: 700;
+      letter-spacing: .04em;
+    }
+
+    /* ---- LAYOUT ---- */
+    .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
+
+    /* ---- UPLOAD ZONE ---- */
+    #upload-section { margin-bottom: 28px; }
+    .drop-zone {
+      border: 2px dashed #a7c4d8;
+      border-radius: 16px;
+      background: #fff;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #0f766e;
+      background: #f0fdf9;
+    }
+    .drop-zone .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .drop-zone h3 { font-size: 1.1rem; font-weight: 700; color: #1e3a5f; margin-bottom: 6px; }
+    .drop-zone p  { font-size: .88rem; color: #64748b; }
+    .drop-zone input[type=file] { display: none; }
+
+    #file-list { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .file-chip {
+      background: #e0fdf4; border: 1px solid #6ee7b7;
+      color: #065f46; border-radius: 999px;
+      font-size: .82rem; padding: 4px 12px; font-weight: 600;
+    }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 16px;
+      background: linear-gradient(135deg,#0f766e,#155e75);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 11px 24px; font-size: .95rem; font-weight: 700;
+      cursor: pointer; transition: opacity .2s;
+    }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-primary:hover:not(:disabled) { opacity: .9; }
+
+    /* ---- SPINNER ---- */
+    #spinner {
+      display: none; text-align: center; padding: 40px;
+    }
+    .spinner-ring {
+      display: inline-block; width: 44px; height: 44px;
+      border: 4px solid #d1fae5;
+      border-top-color: #0f766e;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- WARNINGS ---- */
+    #warnings-box {
+      display: none;
+      background: #fffbeb; border: 1px solid #fcd34d;
+      border-radius: 10px; padding: 12px 16px;
+      margin-bottom: 16px; font-size: .85rem; color: #78350f;
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+      background: linear-gradient(135deg,#0f766e 0%,#155e75 100%);
+      color: #fff; padding: 18px 22px; border-radius: 16px;
+      margin-bottom: 20px;
+    }
+    .hero h2 { font-size: 1.35rem; margin-bottom: 4px; }
+    .hero p  { opacity: .9; font-size: .9rem; }
+
+    /* ---- TABS ---- */
+    .tab-bar {
+      display: flex; gap: 4px; margin-bottom: 20px;
+      background: #e8eef5; border-radius: 10px; padding: 4px;
+    }
+    .tab-btn {
+      flex: 1; padding: 8px 4px; border: none; background: none;
+      border-radius: 7px; font-size: .82rem; font-weight: 600;
+      color: #44617f; cursor: pointer; transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .tab-btn.active { background: #fff; color: #0f766e; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ---- CARDS ---- */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; margin-bottom: 20px; }
+    .card {
+      background: #fff; border: 1px solid #d8e2ee;
+      border-radius: 14px; padding: 16px;
+      box-shadow: 0 4px 12px rgba(16,24,40,.05);
+    }
+    .card .label {
+      font-size: .78rem; color: #375a7f; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
+    }
+    .card .value { font-size: 1.45rem; font-weight: 800; color: #0f172a; }
+    .card .delta { font-size: .78rem; color: #1d4ed8; margin-top: 4px; }
+    .card.sub { margin-left: 16px; border-left: 3px solid #6ee7b7; }
+
+    /* ---- CHART CANVAS ---- */
+    .chart-wrap {
+      background: #fff; border: 1px solid #d8e2ee; border-radius: 14px;
+      padding: 20px; margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(16,24,40,.04);
+    }
+    .chart-wrap h4 { font-size: .88rem; color: #44617f; font-weight: 700; margin-bottom: 14px; }
+    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* ---- TABLES ---- */
+    .tbl-wrap {
+      background: #fff; border: 1px solid #d8e2ee; border-radius: 14px;
+      overflow: hidden; margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(16,24,40,.04);
+    }
+    .tbl-wrap h4 { font-size: .88rem; color: #44617f; font-weight: 700; padding: 14px 16px; border-bottom: 1px solid #e8eef5; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    thead th {
+      background: #f8fafc; text-align: left;
+      padding: 9px 14px; font-weight: 700;
+      color: #374151; border-bottom: 1px solid #e8eef5;
+      white-space: nowrap;
+    }
+    tbody td { padding: 8px 14px; border-bottom: 1px solid #f1f5f9; color: #374151; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: #f8fafc; }
+
+    /* ---- DOWNLOAD BTN ---- */
+    .btn-dl {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; border: 1px solid #0f766e; color: #0f766e;
+      border-radius: 10px; padding: 9px 20px;
+      font-size: .9rem; font-weight: 700; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-dl:hover { background: #f0fdf9; }
+
+    /* ---- INFO BOX ---- */
+    .info-box {
+      background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 10px; padding: 12px 16px;
+      font-size: .85rem; color: #1e40af; margin-bottom: 12px;
+    }
+
+    /* ---- SCROLLABLE AUDIT ---- */
+    .audit-scroll { max-height: 480px; overflow-y: auto; }
+
+    @media (max-width: 640px) {
+      .chart-row { grid-template-columns: 1fr; }
+      .tab-btn { font-size: .72rem; padding: 7px 3px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">💎 ESG AutoPilot</span>
+  <span class="badge">Enterprise</span>
+</nav>
+
+<div class="container">
+
+  <!-- Upload Section -->
+  <div id="upload-section">
+    <div class="drop-zone" id="drop-zone">
+      <div class="icon">📂</div>
+      <h3>Upload your ESG data files</h3>
+      <p>Drag &amp; drop Excel (.xlsx / .xls) or CSV files here, or click to browse</p>
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple />
+    </div>
+    <div id="file-list"></div>
+    <button class="btn-primary" id="process-btn" disabled>
+      ⚡ Process Files
+    </button>
+  </div>
+
+  <!-- Spinner -->
+  <div id="spinner">
+    <div class="spinner-ring"></div>
+    <p style="margin-top:12px;color:#64748b;font-size:.9rem;">Processing your ESG data&hellip;</p>
+  </div>
+
+  <!-- Results -->
+  <div id="results" style="display:none;">
+
+    <div id="warnings-box"></div>
+
+    <div class="hero" id="hero-bar">
+      <h2>ESG Performance Dashboard</h2>
+      <p id="hero-period">Latest reporting period: —</p>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="highlights">Highlights</button>
+      <button class="tab-btn" data-tab="trends">Year-wise Trends</button>
+      <button class="tab-btn" data-tab="scope">Scope Analysis</button>
+      <button class="tab-btn" data-tab="energy">Energy Mix</button>
+      <button class="tab-btn" data-tab="renewable">Renewable KPIs</button>
+      <button class="tab-btn" data-tab="audit">Audit Trail</button>
+    </div>
+
+    <!-- Highlights -->
+    <div class="tab-panel active" id="tab-highlights">
+      <div class="card-grid" id="kpi-cards"></div>
+    </div>
+
+    <!-- Trends -->
+    <div class="tab-panel" id="tab-trends">
+      <div class="chart-row">
+        <div class="chart-wrap">
+          <h4>Emissions Trend (tCO2e)</h4>
+          <canvas id="chart-emissions"></canvas>
+        </div>
+        <div class="chart-wrap">
+          <h4>Energy Trend (GJ)</h4>
+          <canvas id="chart-energy"></canvas>
+        </div>
+      </div>
+      <div class="info-box" id="proxy-note" style="display:none;">
+        Proxy years are filled with 5% lower values than the next available FY.
+      </div>
+      <div class="tbl-wrap">
+        <h4>Year-wise Summary</h4>
+        <div class="audit-scroll">
+          <table id="tbl-yearly">
+            <thead>
+              <tr><th>Period</th><th>Type</th><th>Total tCO2e</th><th>Scope 1</th><th>Scope 2</th><th>Energy GJ</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scope Analysis -->
+    <div class="tab-panel" id="tab-scope">
+      <div class="chart-wrap" style="max-width:500px;">
+        <h4>Emissions by Scope (tCO2e)</h4>
+        <canvas id="chart-scope"></canvas>
+      </div>
+      <div class="tbl-wrap">
+        <h4>Scope Breakdown</h4>
+        <table id="tbl-scope">
+          <thead><tr><th>Scope</th><th>Total Emissions (tCO2e)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Energy Mix -->
+    <div class="tab-panel" id="tab-energy">
+      <div class="chart-wrap" style="max-width:480px;">
+        <h4>Renewable vs Non-Renewable Energy (GJ)</h4>
+        <canvas id="chart-mix"></canvas>
+      </div>
+      <div class="tbl-wrap">
+        <h4>Top Fuel Types by Energy (GJ)</h4>
+        <table id="tbl-fuel">
+          <thead><tr><th>Fuel / Electricity Type</th><th>Energy Usage (GJ)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Renewable KPIs -->
+    <div class="tab-panel" id="tab-renewable">
+      <div class="card-grid" id="ren-cards"></div>
+    </div>
+
+    <!-- Audit Trail -->
+    <div class="tab-panel" id="tab-audit">
+      <div style="margin-bottom:12px;">
+        <button class="btn-dl" id="download-btn">📥 Download Audit Trail (.xlsx)</button>
+      </div>
+      <div class="tbl-wrap">
+        <h4>Full Audit Trail</h4>
+        <div class="audit-scroll" style="overflow-x:auto;">
+          <table id="tbl-audit">
+            <thead><tr id="audit-head"></tr></thead>
+            <tbody id="audit-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /container -->
+
+<script>
+// ---------- File picker ----------
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const fileList   = document.getElementById('file-list');
+const processBtn = document.getElementById('process-btn');
+let selectedFiles = [];
+
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave',  () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  addFiles(e.dataTransfer.files);
+});
+
+function addFiles(newFiles) {
+  for (const f of newFiles) {
+    if (!selectedFiles.find(x => x.name === f.name)) selectedFiles.push(f);
+  }
+  renderFileChips();
+}
+
+function renderFileChips() {
+  fileList.innerHTML = selectedFiles.map(f =>
+    `<span class="file-chip">📄 ${f.name}</span>`
+  ).join('');
+  processBtn.disabled = selectedFiles.length === 0;
+}
+
+// ---------- Process ----------
+let excelB64 = null;
+let chartInstances = {};
+
+processBtn.addEventListener('click', async () => {
+  if (!selectedFiles.length) return;
+
+  const fd = new FormData();
+  selectedFiles.forEach(f => fd.append('files', f));
+
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    const res = await fetch('/api/process', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    document.getElementById('spinner').style.display = 'none';
+
+    if (!res.ok) {
+      alert('Error: ' + (data.error || 'Processing failed'));
+      document.getElementById('upload-section').style.display = 'block';
+      return;
+    }
+
+    renderResults(data);
+  } catch (err) {
+    document.getElementById('spinner').style.display = 'none';
+    alert('Network error: ' + err.message);
+    document.getElementById('upload-section').style.display = 'block';
+  }
+});
+
+function fmt(n, dec=2) {
+  if (n == null) return '—';
+  return Number(n).toLocaleString('en-IN', {minimumFractionDigits: dec, maximumFractionDigits: dec});
+}
+
+function renderResults(data) {
+  excelB64 = data.excel_b64;
+
+  // Warnings
+  const wb = document.getElementById('warnings-box');
+  if (data.warnings && data.warnings.length) {
+    wb.innerHTML = '<b>⚠ Warnings</b><ul style="margin-top:6px;padding-left:18px;">' +
+      data.warnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
+    wb.style.display = 'block';
+  }
+
+  // Hero
+  document.getElementById('hero-period').textContent = 'Latest reporting period: ' + data.latest_period;
+
+  // KPI cards
+  const k = data.kpis;
+  const deltaStr = k.delta_total != null
+    ? `${k.delta_total >= 0 ? '+' : ''}${fmt(k.delta_total)} vs prev FY` : null;
+  const deltaEn  = k.delta_energy != null
+    ? `${k.delta_energy >= 0 ? '+' : ''}${fmt(k.delta_energy,0)} GJ vs prev FY` : null;
+
+  document.getElementById('kpi-cards').innerHTML = `
+    ${card('Total Emissions (tCO2e)', fmt(k.total_emissions), deltaStr)}
+    ${card('Scope 1 (tCO2e)',  fmt(k.scope1_emissions), null, true)}
+    ${card('Scope 2 (tCO2e)',  fmt(k.scope2_emissions), null, true)}
+    ${card('Total Energy (GJ)',    fmt(k.total_energy_gj,0), deltaEn)}
+    ${card('Renewable GJ',         fmt(k.renewable_gj,0), null, true)}
+    ${card('Non-Renewable GJ',     fmt(k.non_renewable_gj,0), null, true)}
+    ${card('Renewable Energy %',   fmt(k.renewable_energy_pct) + '%')}
+    ${card('Renewable Fuel %',     fmt(k.renewable_fuel_pct) + '%')}
+    ${card('Renewable Electricity %', fmt(k.renewable_electricity_pct) + '%')}
+  `;
+
+  // Renewable KPI tab cards
+  document.getElementById('ren-cards').innerHTML = `
+    ${card('Renewable Energy %',       fmt(k.renewable_energy_pct) + '%')}
+    ${card('Renewable Fuel %',         fmt(k.renewable_fuel_pct) + '%')}
+    ${card('Renewable Electricity %',  fmt(k.renewable_electricity_pct) + '%')}
+  `;
+
+  // --- Yearly trend table & charts ---
+  const trend = data.yearly_trend || [];
+  const tbl = document.querySelector('#tbl-yearly tbody');
+  tbl.innerHTML = trend.map(r => `<tr>
+    <td>${r.Period}</td>
+    <td><span style="background:${r['Data Type']==='Proxy'?'#fef9c3':'#dcfce7'};padding:2px 8px;border-radius:999px;font-size:.75rem;font-weight:700;">${r['Data Type']}</span></td>
+    <td>${fmt(r['Total Emissions (tCO2e)'])}</td>
+    <td>${fmt(r['Scope 1'])}</td>
+    <td>${fmt(r['Scope 2'])}</td>
+    <td>${fmt(r['Energy Usage (GJ)'],0)}</td>
+  </tr>`).join('');
+
+  if (trend.some(r => r['Data Type'] === 'Proxy'))
+    document.getElementById('proxy-note').style.display = 'block';
+
+  destroyChart('chart-emissions');
+  destroyChart('chart-energy');
+
+  if (trend.length) {
+    const labels = trend.map(r => r.Period);
+    chartInstances['chart-emissions'] = new Chart(document.getElementById('chart-emissions'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Total', data: trend.map(r => r['Total Emissions (tCO2e)']), borderColor: '#0f766e', tension: .3, fill: false },
+          { label: 'Scope 1', data: trend.map(r => r['Scope 1']),  borderColor: '#f59e0b', tension: .3, fill: false },
+          { label: 'Scope 2', data: trend.map(r => r['Scope 2']),  borderColor: '#3b82f6', tension: .3, fill: false },
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    chartInstances['chart-energy'] = new Chart(document.getElementById('chart-energy'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: 'Energy (GJ)', data: trend.map(r => r['Energy Usage (GJ)']), backgroundColor: '#6ee7b7' }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+  }
+
+  // --- Scope analysis ---
+  const scope = data.scope_analysis || [];
+  document.querySelector('#tbl-scope tbody').innerHTML = scope.map(r =>
+    `<tr><td>${r.Scope}</td><td>${fmt(r['Total Emissions (tCO2e)'])}</td></tr>`
+  ).join('');
+
+  destroyChart('chart-scope');
+  if (scope.length) {
+    chartInstances['chart-scope'] = new Chart(document.getElementById('chart-scope'), {
+      type: 'doughnut',
+      data: {
+        labels: scope.map(r => r.Scope),
+        datasets: [{ data: scope.map(r => r['Total Emissions (tCO2e)']),
+          backgroundColor: ['#0f766e','#3b82f6','#f59e0b','#ef4444','#8b5cf6'] }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'right' } } }
+    });
+  }
+
+  // --- Energy mix ---
+  destroyChart('chart-mix');
+  chartInstances['chart-mix'] = new Chart(document.getElementById('chart-mix'), {
+    type: 'bar',
+    data: {
+      labels: ['Renewable', 'Non-Renewable'],
+      datasets: [{ data: [k.renewable_gj, k.non_renewable_gj],
+        backgroundColor: ['#6ee7b7','#fca5a5'] }]
+    },
+    options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } } }
+  });
+
+  const fuel = data.fuel_mix || [];
+  document.querySelector('#tbl-fuel tbody').innerHTML = fuel.map(r =>
+    `<tr><td>${r['Fuel / Electricity Type']}</td><td>${fmt(r['Energy Usage (GJ)'],1)}</td></tr>`
+  ).join('');
+
+  // --- Audit trail ---
+  const audit = data.audit_trail || [];
+  if (audit.length) {
+    const cols = Object.keys(audit[0]);
+    document.getElementById('audit-head').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
+    document.getElementById('audit-body').innerHTML = audit.map(r =>
+      `<tr>${cols.map(c => `<td>${r[c] != null ? r[c] : ''}</td>`).join('')}</tr>`
+    ).join('');
+  }
+
+  document.getElementById('results').style.display = 'block';
+}
+
+function card(label, value, delta=null, sub=false) {
+  return `<div class="card${sub?' sub':''}">
+    <div class="label">${label}</div>
+    <div class="value">${value}</div>
+    ${delta ? `<div class="delta">${delta}</div>` : ''}
+  </div>`;
+}
+
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Download ----------
+document.getElementById('download-btn').addEventListener('click', () => {
+  if (!excelB64) return;
+  const bytes = Uint8Array.from(atob(excelB64), c => c.charCodeAt(0));
+  const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'esg_audit.xlsx';
+  a.click();
+});
+</script>
+</body>
+</html>
