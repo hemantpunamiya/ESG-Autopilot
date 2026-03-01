@@ -679,7 +679,7 @@ FOSSIL_FUEL_TYPES = {
 }
 
 
-def _pct(part, whole):
+def pct(part, whole):
     return 0.0 if whole == 0 else round((part / whole) * 100, 2)
 
 

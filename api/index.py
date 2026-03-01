@@ -151,9 +151,9 @@ def _do_process():
             "total_energy_gj": round(float(total_gj), 0),
             "renewable_gj": round(float(renewable_gj), 0),
             "non_renewable_gj": round(float(non_renewable_gj), 0),
-            "renewable_energy_pct": _pct(renewable_gj, total_gj),
-            "renewable_fuel_pct": _pct(ren_fuel_gj, ren_fuel_base),
-            "renewable_electricity_pct": _pct(ren_elec_gj, ren_elec_base),
+            "renewable_energy_pct": pct(renewable_gj, total_gj),
+            "renewable_fuel_pct": pct(ren_fuel_gj, ren_fuel_base),
+            "renewable_electricity_pct": pct(ren_elec_gj, ren_elec_base),
             "delta_total": round(float(latest_row["Total Emissions (tCO2e)"] - prev_row["Total Emissions (tCO2e)"]), 2)
                            if (latest_row is not None and prev_row is not None) else None,
             "delta_energy": round(float(latest_row["Energy Usage (GJ)"] - prev_row["Energy Usage (GJ)"]), 0)
