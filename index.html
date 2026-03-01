@@ -190,8 +190,18 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* ---- CARDS ---- */
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px,1fr)); gap: 14px; margin-bottom: 22px; }
+    /* ---- CARDS 3x3 MATRIX ---- */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px; margin-bottom: 22px;
+    }
+    .card-grid .col-head {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--text-light);
+      padding: 0 4px 6px; border-bottom: 1px solid var(--border);
+      margin-bottom: -4px;
+    }
     .card {
       background: var(--bg-white); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 18px 20px;
@@ -209,6 +219,10 @@
       margin-top: 6px; font-weight: 600;
     }
     .card.sub { border-left: 3px solid var(--olive); }
+    @media (max-width: 700px) {
+      .card-grid { grid-template-columns: 1fr; }
+      .card-grid .col-head { display: none; }
+    }
 
     /* ---- CHART CANVAS ---- */
     .chart-wrap {
@@ -536,16 +550,23 @@ function renderResults(data) {
   const deltaEn  = k.delta_energy != null
     ? `${k.delta_energy >= 0 ? '+' : ''}${fmt(k.delta_energy,0)} GJ vs prev FY` : null;
 
+  // 3x3 matrix: Emissions | Energy | Percentages
   document.getElementById('kpi-cards').innerHTML = `
-    ${card('Total Emissions (tCO2e)', fmt(k.total_emissions), deltaStr)}
-    ${card('Scope 1 (tCO2e)',  fmt(k.scope1_emissions), null, true)}
-    ${card('Scope 2 (tCO2e)',  fmt(k.scope2_emissions), null, true)}
-    ${card('Total Energy (GJ)',    fmt(k.total_energy_gj,0), deltaEn)}
-    ${card('Renewable GJ',         fmt(k.renewable_gj,0), null, true)}
-    ${card('Non-Renewable GJ',     fmt(k.non_renewable_gj,0), null, true)}
-    ${card('Renewable Energy %',   fmt(k.renewable_energy_pct) + '%')}
-    ${card('Renewable Fuel %',     fmt(k.renewable_fuel_pct) + '%')}
-    ${card('Renewable Electricity %', fmt(k.renewable_electricity_pct) + '%')}
+    <div class="col-head">Emissions (tCO2e)</div>
+    <div class="col-head">Energy (GJ)</div>
+    <div class="col-head">Renewable Mix</div>
+
+    ${card('Total Emissions', fmt(k.total_emissions), deltaStr)}
+    ${card('Total Energy', fmt(k.total_energy_gj,0), deltaEn)}
+    ${card('Renewable Energy %', fmt(k.renewable_energy_pct) + '%')}
+
+    ${card('Scope 1', fmt(k.scope1_emissions), null, true)}
+    ${card('Renewable', fmt(k.renewable_gj,0), null, true)}
+    ${card('Renewable Fuel %', fmt(k.renewable_fuel_pct) + '%', null, true)}
+
+    ${card('Scope 2', fmt(k.scope2_emissions), null, true)}
+    ${card('Non-Renewable', fmt(k.non_renewable_gj,0), null, true)}
+    ${card('Renewable Electricity %', fmt(k.renewable_electricity_pct) + '%', null, true)}
   `;
 
   // Renewable KPI tab cards
