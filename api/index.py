@@ -797,7 +797,7 @@ def process_files():
 
     # Excel export (base64)
     buf = io.BytesIO()
-    with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         rdf.to_excel(writer, index=False, sheet_name="ESG Audit Trail")
     excel_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
 
