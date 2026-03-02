@@ -177,6 +177,14 @@
       display: flex; gap: 6px; margin-bottom: 22px;
       flex-wrap: wrap;
     }
+    .tabs-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
     .tab-btn {
       padding: 8px 18px; border: 1px solid var(--border); background: var(--bg-white);
       border-radius: var(--radius-pill); font-size: .82rem; font-weight: 600;
@@ -266,6 +274,12 @@
       font-size: .85rem; font-weight: 600; cursor: pointer;
       transition: all .15s; font-family: inherit;
     }
+    .btn-dl.big {
+      padding: 13px 28px;
+      font-size: .95rem;
+      font-weight: 700;
+      min-height: 46px;
+    }
     .btn-dl:hover { background: var(--black); color: #fff; }
 
     /* ---- INFO BOX ---- */
@@ -351,13 +365,16 @@
       <p id="hero-period">Latest reporting period: —</p>
     </div>
 
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="highlights">Highlights</button>
-      <button class="tab-btn" data-tab="trends">Year-wise Trends</button>
-      <button class="tab-btn" data-tab="scope">Scope Analysis</button>
-      <button class="tab-btn" data-tab="energy">Energy Mix</button>
-      <button class="tab-btn" data-tab="renewable">Renewable Progression</button>
-      <button class="tab-btn" data-tab="audit">Audit Trail</button>
+    <div class="tabs-actions">
+      <div class="tab-bar">
+        <button class="tab-btn active" data-tab="highlights">Highlights</button>
+        <button class="tab-btn" data-tab="trends">Year-wise Trends</button>
+        <button class="tab-btn" data-tab="scope">Scope Analysis</button>
+        <button class="tab-btn" data-tab="energy">Energy Mix</button>
+        <button class="tab-btn" data-tab="renewable">Renewable Progression</button>
+        <button class="tab-btn" data-tab="audit">Audit Trail</button>
+      </div>
+      <button class="btn-dl big" id="download-btn">Download Excel</button>
     </div>
 
     <!-- Highlights -->
@@ -442,9 +459,6 @@
 
     <!-- Audit Trail -->
     <div class="tab-panel" id="tab-audit">
-      <div style="margin-bottom:14px;">
-        <button class="btn-dl" id="download-btn">Download Audit Trail (.xlsx)</button>
-      </div>
       <div class="tbl-wrap">
         <h4>Full Audit Trail</h4>
         <div class="audit-scroll" style="overflow-x:auto;">
