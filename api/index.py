@@ -69,6 +69,9 @@ def _do_process():
             xl = pd.ExcelFile(io.BytesIO(data)) if ftype != "csv" else None
             sheets = xl.sheet_names if xl else [None]
             for s in sheets:
+                if should_skip_sheet(s):
+                    warnings.append(f"Skipping summary sheet '{s}' in {fname}.")
+                    continue
                 try:
                     if ftype == "csv":
                         raw_df = pd.read_csv(io.BytesIO(data), header=None)
@@ -98,6 +101,11 @@ def _do_process():
         return jsonify({"error": "No processable data found.", "warnings": warnings}), 422
 
     rdf = pd.DataFrame(all_rows)
+    rdf, removed_double = remove_double_ingested_rows(rdf)
+    if removed_double:
+        warnings.append(
+            f"Removed {removed_double} suspected double-ingested row(s) where pre-calculated tCO2e was treated as raw quantity."
+        )
     if "Validation Notes" in rdf.columns:
         flagged = rdf[rdf["Validation Notes"].fillna("OK") != "OK"]
         if not flagged.empty:
@@ -188,4 +196,3 @@ def _do_process():
         "audit_trail": audit_records,
         "excel_b64": excel_b64,
     })
-

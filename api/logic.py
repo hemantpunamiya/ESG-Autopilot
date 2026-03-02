@@ -272,6 +272,29 @@ def detect_site_type(name):
     return "Commercial Site"
 
 
+def is_emissions_or_total_column(text):
+    t = str(text).strip().lower()
+    if not t:
+        return False
+    return bool(re.search(
+        r"tco2e|tco2|kgco2e|co.?2e|emission|total emissions|scope\s*[12]\b",
+        t,
+        re.IGNORECASE
+    ))
+
+
+def has_physical_unit_marker(text):
+    t = str(text).strip().lower()
+    return bool(re.search(r"\b(kl|kg|scm|sm3|kwh|mwh|gj|litre|liter|ltr|nos|unit)\b", t))
+
+
+def should_skip_sheet(sheet_context):
+    s = str(sheet_context or "").strip().lower()
+    if not s:
+        return False
+    return bool(re.search(r"\bconsolidated\b", s))
+
+
 def detect_and_melt_matrix(df):
     loc_col = None
     for col in df.columns:
@@ -285,12 +308,17 @@ def detect_and_melt_matrix(df):
         if c != loc_col
         and map_fuel_name(c, default=None) is not None
         and not is_reference_text(c)
+        and not is_emissions_or_total_column(c)
     ]
     if any(extract_period_metadata(c) for c in fuel_headers):
         fuel_headers = [c for c in fuel_headers if extract_period_metadata(c)]
     if len(fuel_headers) < 2:
         return df, False, None
-    value_vars = [c for c in fuel_headers if not any(kw in str(c).lower() for kw in EXCLUDE_KW)]
+    value_vars = [
+        c for c in fuel_headers
+        if not any(kw in str(c).lower() for kw in EXCLUDE_KW)
+        and not is_emissions_or_total_column(c)
+    ]
     id_vars = [loc_col]
     for c in df.columns:
         if c != loc_col and any(kw in str(c).lower() for kw in ["month", "year", "fy", "period"]) and c not in value_vars:
@@ -322,6 +350,9 @@ def try_parse_tidy(raw_df, default_period="", sheet_context=""):
 
     Returns a list of processed rows, or [] if this format is not detected.
     """
+    if should_skip_sheet(sheet_context):
+        return []
+
     df = raw_df.copy()
 
     # 1. Find the header row (scan first 5 rows for tidy column keywords)
@@ -378,6 +409,8 @@ def try_parse_tidy(raw_df, default_period="", sheet_context=""):
         if c in skip_cols:
             continue
         cl = col_lower[c]
+        if is_emissions_or_total_column(cl):
+            continue
         if any(kw in cl for kw in _QTY_KW):
             if pd.to_numeric(data_df[c], errors='coerce').notna().any():
                 qty_col = c
@@ -385,6 +418,11 @@ def try_parse_tidy(raw_df, default_period="", sheet_context=""):
     if qty_col is None:
         for c in raw_cols:
             if c in skip_cols:
+                continue
+            cl = col_lower[c]
+            if is_emissions_or_total_column(cl):
+                continue
+            if not (has_physical_unit_marker(cl) or any(kw in cl for kw in _QTY_KW)):
                 continue
             converted = pd.to_numeric(data_df[c], errors='coerce')
             if converted.notna().sum() > len(data_df) * 0.4:
@@ -590,6 +628,8 @@ def classify_headers(df):
         c_low = str(col).lower()
         if any(kw in c_low for kw in EXCLUDE_KW):
             continue
+        if is_emissions_or_total_column(c_low):
+            continue
         if is_reference_text(col):
             continue
         is_num = pd.api.types.is_numeric_dtype(df[col])
@@ -622,7 +662,7 @@ def classify_headers(df):
 
 
 def process_table_block(df, parent_period, sheet_context=""):
-    if "consolidated" in sheet_context:
+    if should_skip_sheet(sheet_context):
         return []
     is_mobile = "mobile" in sheet_context
     stop_re = re.compile(r"co.?2e emissions|emission factors|total scope 1 emissions|notes:", re.IGNORECASE)
@@ -702,6 +742,21 @@ def process_table_block(df, parent_period, sheet_context=""):
             return False
 
     df = df[~df.apply(_is_total_row, axis=1)]
+    if df.empty:
+        return []
+
+    # Hard-drop emissions/summary columns before fuel mapping to avoid double-ingestion.
+    drop_cols = []
+    for c in df.columns:
+        c_low = str(c).lower()
+        if is_emissions_or_total_column(c_low):
+            if any(k in c_low for k in ["site", "location", "plant", "branch", "area", "month", "year", "fy", "period"]):
+                continue
+            drop_cols.append(c)
+    if drop_cols:
+        df = df.drop(columns=drop_cols, errors="ignore")
+    if df.empty:
+        return []
 
     m_df, is_matrix, loc_col = detect_and_melt_matrix(df)
 
@@ -755,6 +810,39 @@ def process_table_block(df, parent_period, sheet_context=""):
                             resolved_fuel, ef_override = resolve_fuel_profile(q['name'], resolved_fuel)
                             results.append(process_standard_row(resolved_fuel, val, row_p, loc, find_unit(q['name']), ef_override))
     return results
+
+
+def remove_double_ingested_rows(rdf, rel_tol=0.02):
+    """Drop rows that look like pre-calculated tCO2e re-ingested as Quantity."""
+    if rdf is None or rdf.empty:
+        return rdf, 0
+    df = rdf.copy().reset_index(drop=True)
+    suspect_idx = set()
+    keys = ["Period", "Location", "Fuel / Electricity Type"]
+    for _, grp in df.groupby(keys, dropna=False):
+        if len(grp) < 2:
+            continue
+        recs = grp[["Quantity", "Total Emissions (tCO2e)"]].to_dict(orient="records")
+        gidx = list(grp.index)
+        for i, ri in enumerate(recs):
+            qi = safe_float(ri.get("Quantity", 0))
+            ti = safe_float(ri.get("Total Emissions (tCO2e)", 0))
+            for j, rj in enumerate(recs):
+                if i == j:
+                    continue
+                tj = safe_float(rj.get("Total Emissions (tCO2e)", 0))
+                if tj <= 0:
+                    continue
+                # Quantity of candidate row ~= tCO2e from another row in same key.
+                if abs(qi - tj) <= max(0.01, rel_tol * tj):
+                    # Re-ingested rows tend to be much more inflated than the source row.
+                    if ti > (tj * 1.2):
+                        suspect_idx.add(gidx[i])
+                        break
+    if not suspect_idx:
+        return df, 0
+    cleaned = df.drop(index=sorted(suspect_idx)).reset_index(drop=True)
+    return cleaned, len(suspect_idx)
 
 
 def get_fy_start(period_text):

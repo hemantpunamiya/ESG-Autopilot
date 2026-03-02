@@ -339,6 +339,22 @@ def detect_site_type(name):
     if any(x in name_low for x in ["village", "rural", "gram"]): return "Village/Rural Site"
     return "Commercial Site"
 
+def is_emissions_or_total_column(text):
+    t = str(text).strip().lower()
+    if not t:
+        return False
+    return bool(re.search(
+        r"tco2e|tco2|kgco2e|co.?2e|emission|total emissions|scope\s*[12]\b",
+        t,
+        re.IGNORECASE
+    ))
+
+def should_skip_sheet(sheet_context):
+    s = str(sheet_context or "").strip().lower()
+    if not s:
+        return False
+    return bool(re.search(r"\bconsolidated\b", s))
+
 def detect_and_melt_matrix(df):
     loc_col = None
     for col in df.columns:
@@ -351,13 +367,18 @@ def detect_and_melt_matrix(df):
         if c != loc_col
         and map_fuel_name(c, default=None) is not None
         and not is_reference_text(c)
+        and not is_emissions_or_total_column(c)
     ]
     if any(extract_period_metadata(c) for c in fuel_headers):
         fuel_headers = [c for c in fuel_headers if extract_period_metadata(c)]
     if len(fuel_headers) < 2: return df, False, None
     
     # Strictly exclude technical columns
-    value_vars = [c for c in fuel_headers if not any(kw in str(c).lower() for kw in EXCLUDE_KW)]
+    value_vars = [
+        c for c in fuel_headers
+        if not any(kw in str(c).lower() for kw in EXCLUDE_KW)
+        and not is_emissions_or_total_column(c)
+    ]
     
     id_vars = [loc_col]
     for c in df.columns:
@@ -467,7 +488,7 @@ def process_electricity_sheet(raw_df, default_period=""):
 
 def process_table_block(df, parent_period, sheet_context=""):
     """Processes a single block of data (matrix or standard)."""
-    if "consolidated" in sheet_context:
+    if should_skip_sheet(sheet_context):
         return []
 
     is_mobile = "mobile" in sheet_context
@@ -549,6 +570,21 @@ def process_table_block(df, parent_period, sheet_context=""):
         except Exception:
             return False
     df = df[~df.apply(_is_total_row, axis=1)]
+    if df.empty:
+        return []
+
+    # Drop columns that are emissions/summary outputs to avoid re-ingestion as activity data.
+    drop_cols = []
+    for c in df.columns:
+        c_low = str(c).lower()
+        if is_emissions_or_total_column(c_low):
+            if any(k in c_low for k in ["site", "location", "plant", "branch", "area", "month", "year", "fy", "period"]):
+                continue
+            drop_cols.append(c)
+    if drop_cols:
+        df = df.drop(columns=drop_cols, errors="ignore")
+    if df.empty:
+        return []
     
     # 3. Detect Matrix
     m_df, is_matrix, loc_col = detect_and_melt_matrix(df)
@@ -608,6 +644,36 @@ def process_table_block(df, parent_period, sheet_context=""):
     
     return results
 
+def remove_double_ingested_rows(rdf, rel_tol=0.02):
+    """Drop rows that look like pre-calculated tCO2e re-ingested as Quantity."""
+    if rdf is None or rdf.empty:
+        return rdf, 0
+    df = rdf.copy().reset_index(drop=True)
+    suspect_idx = set()
+    keys = ["Period", "Location", "Fuel / Electricity Type"]
+    for _, grp in df.groupby(keys, dropna=False):
+        if len(grp) < 2:
+            continue
+        recs = grp[["Quantity", "Total Emissions (tCO2e)"]].to_dict(orient="records")
+        gidx = list(grp.index)
+        for i, ri in enumerate(recs):
+            qi = safe_float(ri.get("Quantity", 0))
+            ti = safe_float(ri.get("Total Emissions (tCO2e)", 0))
+            for j, rj in enumerate(recs):
+                if i == j:
+                    continue
+                tj = safe_float(rj.get("Total Emissions (tCO2e)", 0))
+                if tj <= 0:
+                    continue
+                if abs(qi - tj) <= max(0.01, rel_tol * tj):
+                    if ti > (tj * 1.2):
+                        suspect_idx.add(gidx[i])
+                        break
+    if not suspect_idx:
+        return df, 0
+    cleaned = df.drop(index=sorted(suspect_idx)).reset_index(drop=True)
+    return cleaned, len(suspect_idx)
+
 def classify_headers(df):
     cl = {"location": [], "period": None, "fuels": {}, "qty": [], "other": []}
     sample_blob = " ".join(df.astype(str).head(10).values.flatten().tolist()).lower()
@@ -616,6 +682,7 @@ def classify_headers(df):
     for col in df.columns:
         c_low = str(col).lower()
         if any(kw in c_low for kw in EXCLUDE_KW): continue
+        if is_emissions_or_total_column(c_low): continue
         if is_reference_text(col): continue
         is_num = pd.api.types.is_numeric_dtype(df[col])
         p_ext = extract_period_metadata(col)
@@ -781,6 +848,9 @@ if up_files:
                     xl = pd.ExcelFile(io.BytesIO(data)) if ftype != 'csv' else None
                     sheets = xl.sheet_names if xl else [None]
                     for s in sheets:
+                        if should_skip_sheet(s):
+                            st.info(f"Skipping summary sheet '{s}' in {up.name}.")
+                            continue
                         try:
                             raw_df = pd.read_csv(io.BytesIO(data), header=None) if ftype == 'csv' else pd.read_excel(io.BytesIO(data), sheet_name=s, header=None)
                             s_p = extract_period_metadata(s) if s else ""
@@ -802,6 +872,11 @@ if up_files:
 
     if all_rows:
         rdf = pd.DataFrame(all_rows)
+        rdf, removed_double = remove_double_ingested_rows(rdf)
+        if removed_double:
+            st.warning(
+                f"Removed {removed_double} suspected double-ingested row(s) where pre-calculated tCO2e was treated as raw quantity."
+            )
         if "Validation Notes" in rdf.columns:
             flagged = rdf[rdf["Validation Notes"].fillna("OK") != "OK"]
             if not flagged.empty:
