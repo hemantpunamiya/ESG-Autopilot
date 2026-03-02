@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -355,7 +356,7 @@
       <button class="tab-btn" data-tab="trends">Year-wise Trends</button>
       <button class="tab-btn" data-tab="scope">Scope Analysis</button>
       <button class="tab-btn" data-tab="energy">Energy Mix</button>
-      <button class="tab-btn" data-tab="renewable">Renewable KPIs</button>
+      <button class="tab-btn" data-tab="renewable">Renewable Progression</button>
       <button class="tab-btn" data-tab="audit">Audit Trail</button>
     </div>
 
@@ -422,9 +423,21 @@
       </div>
     </div>
 
-    <!-- Renewable KPIs -->
+    <!-- Renewable Progression -->
     <div class="tab-panel" id="tab-renewable">
-      <div class="card-grid" id="ren-cards"></div>
+      <div class="chart-wrap">
+        <h4>Year-wise Renewable Progression (%)</h4>
+        <canvas id="chart-renewable-progression"></canvas>
+      </div>
+      <div class="tbl-wrap">
+        <h4>Renewable Progression Summary</h4>
+        <table id="tbl-renewable-progression">
+          <thead>
+            <tr><th>Period</th><th>Renewable Energy %</th><th>Renewable Fuel %</th><th>Renewable Electricity %</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Audit Trail -->
@@ -481,6 +494,9 @@ function renderFileChips() {
 // ---------- Process ----------
 let excelB64 = null;
 let chartInstances = {};
+if (window.ChartDataLabels) {
+  Chart.register(window.ChartDataLabels);
+}
 
 processBtn.addEventListener('click', async () => {
   if (!selectedFiles.length) return;
@@ -516,6 +532,55 @@ function fmt(n, dec=2) {
   if (n == null) return '\u2014';
   return Number(n).toLocaleString('en-IN', {minimumFractionDigits: dec, maximumFractionDigits: dec});
 }
+function fmtPct(n, dec=1) {
+  if (n == null) return '\u2014';
+  return `${fmt(n, dec)}%`;
+}
+function asNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function parseFyStart(period) {
+  const m = String(period || '').match(/FY\s*(20\d{2})\s*[-/]\s*(\d{2,4})/i);
+  return m ? Number(m[1]) : null;
+}
+function calcRenewableProgression(auditTrail) {
+  const renewableElec = new Set([
+    'Renewable Electricity (kWh)', 'Solar (kWh)', 'Wind (kWh)', 'Hydel (kWh)', 'Custom Renewable Electricity (kWh)'
+  ]);
+  const renewableFuel = new Set(['Biofuel (KL)', 'Biodiesel (KL)', 'Briquettes (Kg)']);
+  const grid = new Set(['Grid Electricity (kWh)']);
+  const fossilFuel = new Set(['HSD (KL)', 'HSD Mobile (KL)', 'Furnace Oil (KL)', 'LDO (KL)', 'Natural Gas (SCM)', 'LPG (Kg)', 'LSHS (KL)', 'Petrol (KL)']);
+
+  const byPeriod = {};
+  for (const r of (auditTrail || [])) {
+    const p = r.Period;
+    const fuel = r['Fuel / Electricity Type'];
+    if (!p || !fuel) continue;
+    const e = asNum(r['Energy Usage (GJ)']);
+    if (!byPeriod[p]) byPeriod[p] = { total: 0, renE: 0, renF: 0, renEB: 0, renFB: 0 };
+    byPeriod[p].total += e;
+    if (renewableElec.has(fuel)) byPeriod[p].renE += e;
+    if (renewableFuel.has(fuel)) byPeriod[p].renF += e;
+    if (renewableElec.has(fuel) || grid.has(fuel)) byPeriod[p].renEB += e;
+    if (renewableFuel.has(fuel) || fossilFuel.has(fuel)) byPeriod[p].renFB += e;
+  }
+
+  return Object.keys(byPeriod)
+    .map(p => {
+      const s = byPeriod[p];
+      const ren = s.renE + s.renF;
+      return {
+        Period: p,
+        fyStart: parseFyStart(p),
+        renewable_energy_pct: s.total ? (ren / s.total) * 100 : 0,
+        renewable_fuel_pct: s.renFB ? (s.renF / s.renFB) * 100 : 0,
+        renewable_electricity_pct: s.renEB ? (s.renE / s.renEB) * 100 : 0
+      };
+    })
+    .filter(r => r.fyStart !== null)
+    .sort((a, b) => a.fyStart - b.fyStart);
+}
 
 // ---------- Chart palette ----------
 const PALETTE = {
@@ -538,6 +603,9 @@ function renderResults(data) {
     wb.innerHTML = '<b>Warnings</b><ul style="margin-top:6px;padding-left:18px;">' +
       data.warnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
     wb.style.display = 'block';
+  } else {
+    wb.innerHTML = '';
+    wb.style.display = 'none';
   }
 
   // Hero
@@ -546,7 +614,7 @@ function renderResults(data) {
   // KPI cards
   const k = data.kpis;
   const deltaStr = k.delta_total != null
-    ? `${k.delta_total >= 0 ? '+' : ''}${fmt(k.delta_total)} vs prev FY` : null;
+    ? `${k.delta_total >= 0 ? '+' : ''}${fmt(k.delta_total, 0)} vs prev FY` : null;
   const deltaEn  = k.delta_energy != null
     ? `${k.delta_energy >= 0 ? '+' : ''}${fmt(k.delta_energy,0)} GJ vs prev FY` : null;
 
@@ -556,24 +624,17 @@ function renderResults(data) {
     <div class="col-head">Energy (GJ)</div>
     <div class="col-head">Renewable Mix</div>
 
-    ${card('Total Emissions', fmt(k.total_emissions), deltaStr)}
+    ${card('Total Emissions', fmt(k.total_emissions,0), deltaStr)}
     ${card('Total Energy', fmt(k.total_energy_gj,0), deltaEn)}
-    ${card('Renewable Energy %', fmt(k.renewable_energy_pct) + '%')}
+    ${card('Renewable Energy %', fmt(k.renewable_energy_pct,0) + '%')}
 
-    ${card('Scope 1', fmt(k.scope1_emissions), null, true)}
+    ${card('Scope 1', fmt(k.scope1_emissions,0), null, true)}
     ${card('Renewable', fmt(k.renewable_gj,0), null, true)}
-    ${card('Renewable Fuel %', fmt(k.renewable_fuel_pct) + '%', null, true)}
+    ${card('Renewable Fuel %', fmt(k.renewable_fuel_pct,0) + '%', null, true)}
 
-    ${card('Scope 2', fmt(k.scope2_emissions), null, true)}
+    ${card('Scope 2', fmt(k.scope2_emissions,0), null, true)}
     ${card('Non-Renewable', fmt(k.non_renewable_gj,0), null, true)}
-    ${card('Renewable Electricity %', fmt(k.renewable_electricity_pct) + '%', null, true)}
-  `;
-
-  // Renewable KPI tab cards
-  document.getElementById('ren-cards').innerHTML = `
-    ${card('Renewable Energy %',       fmt(k.renewable_energy_pct) + '%')}
-    ${card('Renewable Fuel %',         fmt(k.renewable_fuel_pct) + '%')}
-    ${card('Renewable Electricity %',  fmt(k.renewable_electricity_pct) + '%')}
+    ${card('Renewable Electricity %', fmt(k.renewable_electricity_pct,0) + '%', null, true)}
   `;
 
   // --- Yearly trend table & charts ---
@@ -606,7 +667,19 @@ function renderResults(data) {
           { label: 'Scope 2', data: trend.map(r => r['Scope 2']),  borderColor: PALETTE.olive, backgroundColor: PALETTE.olive, tension: .35, fill: false, pointRadius: 4 },
         ]
       },
-      options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } } }
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+          datalabels: {
+            align: 'top',
+            anchor: 'end',
+            color: PALETTE.text || '#1A1A1A',
+            formatter: (v) => fmt(v, 0),
+            font: { size: 10, weight: '600' }
+          }
+        }
+      }
     });
 
     chartInstances['chart-energy'] = new Chart(document.getElementById('chart-energy'), {
@@ -615,7 +688,19 @@ function renderResults(data) {
         labels,
         datasets: [{ label: 'Energy (GJ)', data: trend.map(r => r['Energy Usage (GJ)']), backgroundColor: PALETTE.sand, borderRadius: 6 }]
       },
-      options: { responsive: true, plugins: { legend: { display: false } } }
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'end',
+            color: '#1A1A1A',
+            formatter: (v) => fmt(v, 0),
+            font: { size: 10, weight: '600' }
+          }
+        }
+      }
     });
   }
 
@@ -635,7 +720,23 @@ function renderResults(data) {
           backgroundColor: [PALETTE.dark, PALETTE.olive, PALETTE.accent, PALETTE.warm, PALETTE.slate],
           borderWidth: 2, borderColor: '#FAFAF7' }]
       },
-      options: { responsive: true, cutout: '55%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 14 } } } }
+      options: {
+        responsive: true,
+        cutout: '55%',
+        plugins: {
+          legend: { position: 'right', labels: { usePointStyle: true, padding: 14 } },
+          datalabels: {
+            color: '#1A1A1A',
+            formatter: (v, ctx) => {
+              const vals = ctx.chart.data.datasets[0].data || [];
+              const total = vals.reduce((a, b) => a + asNum(b), 0);
+              const pct = total ? (asNum(v) / total) * 100 : 0;
+              return `${fmt(v, 0)} (${fmt(pct, 1)}%)`;
+            },
+            font: { size: 10, weight: '600' }
+          }
+        }
+      }
     });
   }
 
@@ -648,13 +749,73 @@ function renderResults(data) {
       datasets: [{ data: [k.renewable_gj, k.non_renewable_gj],
         backgroundColor: [PALETTE.olive, PALETTE.accent], borderRadius: 6 }]
     },
-    options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } } }
+    options: {
+      responsive: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#1A1A1A',
+          formatter: (v, ctx) => {
+            const vals = ctx.chart.data.datasets[0].data || [];
+            const total = vals.reduce((a, b) => a + asNum(b), 0);
+            const pct = total ? (asNum(v) / total) * 100 : 0;
+            return `${fmt(v, 0)} (${fmt(pct, 1)}%)`;
+          },
+          font: { size: 10, weight: '600' }
+        }
+      }
+    }
   });
 
   const fuel = data.fuel_mix || [];
   document.querySelector('#tbl-fuel tbody').innerHTML = fuel.map(r =>
     `<tr><td>${r['Fuel / Electricity Type']}</td><td>${fmt(r['Energy Usage (GJ)'],1)}</td></tr>`
   ).join('');
+
+  // --- Renewable progression (year-wise) ---
+  const renTrend = calcRenewableProgression(data.audit_trail || []);
+  document.querySelector('#tbl-renewable-progression tbody').innerHTML = renTrend.map(r => `<tr>
+    <td>${r.Period}</td>
+    <td>${fmtPct(r.renewable_energy_pct, 1)}</td>
+    <td>${fmtPct(r.renewable_fuel_pct, 1)}</td>
+    <td>${fmtPct(r.renewable_electricity_pct, 1)}</td>
+  </tr>`).join('');
+
+  destroyChart('chart-renewable-progression');
+  if (renTrend.length) {
+    chartInstances['chart-renewable-progression'] = new Chart(document.getElementById('chart-renewable-progression'), {
+      type: 'line',
+      data: {
+        labels: renTrend.map(r => r.Period),
+        datasets: [
+          { label: 'Renewable Energy %', data: renTrend.map(r => r.renewable_energy_pct), borderColor: PALETTE.dark, backgroundColor: PALETTE.dark, tension: .35, pointRadius: 4, fill: false },
+          { label: 'Renewable Fuel %', data: renTrend.map(r => r.renewable_fuel_pct), borderColor: PALETTE.accent, backgroundColor: PALETTE.accent, tension: .35, pointRadius: 4, fill: false },
+          { label: 'Renewable Electricity %', data: renTrend.map(r => r.renewable_electricity_pct), borderColor: PALETTE.olive, backgroundColor: PALETTE.olive, tension: .35, pointRadius: 4, fill: false }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+          datalabels: {
+            align: 'top',
+            anchor: 'end',
+            color: '#1A1A1A',
+            formatter: (v) => `${fmt(v, 1)}%`,
+            font: { size: 10, weight: '600' }
+          }
+        },
+        scales: {
+          y: {
+            ticks: { callback: (v) => `${v}%` }
+          }
+        }
+      }
+    });
+  }
 
   // --- Audit trail ---
   const audit = data.audit_trail || [];
