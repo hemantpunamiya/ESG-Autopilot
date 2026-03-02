@@ -51,6 +51,7 @@ EF_DATABASE = {
     "Fire Extinguisher 6kg (nos)":    {"factor": 6.0,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
     "Fire Extinguisher 9kg (nos)":    {"factor": 9.0,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
     "Fire Extinguisher 22.5kg (nos)": {"factor": 22.5,  "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
+    "Coal (Kg)":                      {"factor": 1.46,  "ncv": 0.015,   "unit": "kg",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
 }
 
 FUEL_MAPPING = {
@@ -69,6 +70,13 @@ FUEL_MAPPING = {
     "r407a": "R-407A (kg)", "r-407a": "R-407A (kg)",
     "r123": "R123 (kg)", "r-123": "R123 (kg)",
     "r32": "R32 (kg)", "r-32": "R32 (kg)",
+    "png": "Natural Gas (SCM)",
+    "piped natural gas": "Natural Gas (SCM)",
+    "cng": "Natural Gas (SCM)",
+    "compressed natural gas": "Natural Gas (SCM)",
+    "coal": "Coal (Kg)",
+    "bituminous coal": "Coal (Kg)",
+    "sub-bituminous coal": "Coal (Kg)",
     "hsd (mobile)": "HSD Mobile (KL)",
     "hsd mobile": "HSD Mobile (KL)",
     "fire extinguisher refilled: 1 kg":    "Fire Extinguisher 1kg (nos)",
@@ -138,7 +146,10 @@ def is_activity_location(loc):
     if l in ["", "nan", "none", "null", "n/a", "-"]:
         return False
     bad_tokens = ["parameter", "source", "density", "ncv", "gwp", "co2", "ch4", "n2o",
-                  "emission factor", "notes", "site"]
+                  "emission factor", "notes"]
+    # "site" excluded from bad_tokens: substring match wrongly rejects "Site-Alpha" etc.
+    if l in ["site", "site name", "location", "plant name"]:
+        return False
     if any(tok in l for tok in bad_tokens):
         return False
     return True
@@ -206,8 +217,8 @@ def find_unit(text):
     mapping = {
         r'\bkg\b|\bkilogram\b': 'kg',
         r'\bkl\b|\bkilolitre\b|\bkiloliter\b': 'KL',
-        r'\bltr\b|\blitre\b|\bliter\b': 'Litre',
-        r'\bsch?m\b|\bscm\b': 'SCM',
+        r'\bltr\b|\blitre\b|\bliter\b|\bliters\b|\blitres\b': 'Litre',
+        r'\bsch?m\b|\bscm\b|\bsm3\b|\bsm³\b': 'SCM',
         r'\bkwh\b|\bunit\b': 'kWh',
         r'\bmt\b|\bmetric tonn?e\b': 'MT'
     }
@@ -297,6 +308,140 @@ def split_sheet_into_tables(df):
     groups = is_gap.cumsum()
     sub_dfs = [group_df for _, group_df in df[~mask].groupby(groups[~mask]) if len(group_df) > 1]
     return sub_dfs if sub_dfs else ([df[~mask]] if len(df[~mask]) > 1 else [])
+
+
+def try_parse_tidy(raw_df, default_period="", sheet_context=""):
+    """Detect and process tidy/long-row format where each row = one observation.
+
+    Handles sheets like:
+      FY       | Month    | Site       | Fuel | Unit | Quantity
+      FY2024-25| Apr-2024 | Site-Alpha | PNG  | Sm3  | 15918.92
+    or
+      FY       | Month    | Site       | Consumption_kWh
+      FY2024-25| Apr-2024 | Site-Alpha | 171589
+
+    Returns a list of processed rows, or [] if this format is not detected.
+    """
+    df = raw_df.copy()
+
+    # 1. Find the header row (scan first 5 rows for tidy column keywords)
+    _SITE_KW   = ["site", "location", "plant", "branch", "area"]
+    _FUEL_KW   = ["fuel", "energy type", "fuel type", "parameter"]
+    _QTY_KW    = ["quantity", "qty", "amount", "consumption", "volume"]
+    _UNIT_KW   = ["unit", "uom", "units"]
+    _PERIOD_KW = ["month", "date", "period"]
+    _FY_KW     = ["fy", "financial year", "fiscal year"]
+
+    header_row_idx = None
+    for idx in range(min(5, len(df))):
+        vals = [str(v).strip().lower() if pd.notna(v) else "" for v in df.iloc[idx].tolist()]
+        has_site  = any(kw in v for v in vals for kw in _SITE_KW)
+        has_fuel  = any(kw == v for v in vals for kw in _FUEL_KW) or \
+                    any(v == "fuel" for v in vals)
+        has_qty   = any(kw in v for v in vals for kw in _QTY_KW)
+        if has_site and (has_fuel or has_qty):
+            header_row_idx = idx
+            break
+
+    if header_row_idx is None:
+        return []
+
+    # 2. Apply header row as column names
+    raw_cols = [str(v).strip() if pd.notna(v) else f"_col_{i}"
+                for i, v in enumerate(df.iloc[header_row_idx].tolist())]
+    data_df = df.iloc[header_row_idx + 1:].reset_index(drop=True)
+    data_df.columns = raw_cols
+    data_df = data_df.dropna(how='all').reset_index(drop=True)
+    if data_df.empty:
+        return []
+
+    col_lower = {c: c.lower() for c in raw_cols}
+
+    # 3. Identify columns by role
+    fuel_col = next((c for c in raw_cols
+                     if col_lower[c] in ["fuel", "fuel type", "energy type", "type", "parameter"]), None)
+    site_col = next((c for c in raw_cols
+                     if any(kw in col_lower[c] for kw in _SITE_KW)), None)
+    unit_col = next((c for c in raw_cols
+                     if any(kw in col_lower[c] for kw in _UNIT_KW)
+                     and "quantity" not in col_lower[c]), None)
+    fy_col   = next((c for c in raw_cols
+                     if col_lower[c] in ["fy", "financial year", "fiscal year"]), None)
+    month_col = next((c for c in raw_cols
+                      if any(kw in col_lower[c] for kw in _PERIOD_KW)
+                      and c != fy_col), None)
+
+    # Quantity col: named quantity/consumption, or a single numeric non-id column
+    qty_col = None
+    skip_cols = {c for c in [fuel_col, site_col, unit_col, fy_col, month_col] if c}
+    for c in raw_cols:
+        if c in skip_cols:
+            continue
+        cl = col_lower[c]
+        if any(kw in cl for kw in _QTY_KW):
+            if pd.to_numeric(data_df[c], errors='coerce').notna().any():
+                qty_col = c
+                break
+    if qty_col is None:
+        for c in raw_cols:
+            if c in skip_cols:
+                continue
+            converted = pd.to_numeric(data_df[c], errors='coerce')
+            if converted.notna().sum() > len(data_df) * 0.4:
+                qty_col = c
+                break
+
+    if site_col is None or qty_col is None:
+        return []
+
+    # Electricity-only: no fuel col but qty col name contains "kwh"
+    is_elec_only = (fuel_col is None and "kwh" in col_lower.get(qty_col, ""))
+
+    if fuel_col is None and not is_elec_only:
+        return []
+
+    # 4. Process rows
+    results = []
+    for _, row in data_df.iterrows():
+        # Period: prefer FY column (gives "FY 2024-25") over Month ("April 2024")
+        period = default_period
+        if fy_col and pd.notna(row.get(fy_col)):
+            extracted = extract_period_metadata(str(row[fy_col]))
+            if extracted:
+                period = extracted
+        if not is_valid_reporting_period(period) and month_col and pd.notna(row.get(month_col)):
+            extracted = extract_period_metadata(str(row[month_col]))
+            if extracted and is_valid_reporting_period(extracted):
+                period = extracted
+        if not is_valid_reporting_period(period):
+            continue
+
+        # Location
+        loc_val = row.get(site_col)
+        loc = str(loc_val).strip() if pd.notna(loc_val) else ""
+        if not loc or loc.lower() in ["", "nan", "none", "null", "n/a", "-"]:
+            continue
+
+        # Quantity
+        qty = safe_float(row.get(qty_col, 0))
+        if qty <= 0:
+            continue
+
+        # Fuel type & unit
+        if is_elec_only:
+            f_type = "Grid Electricity (kWh)"
+            unit = "kWh"
+        else:
+            raw_fuel = str(row.get(fuel_col, "")).strip() if pd.notna(row.get(fuel_col)) else ""
+            if not raw_fuel or raw_fuel.lower() in ["", "nan", "none"]:
+                continue
+            f_type = map_fuel_name(raw_fuel, default="Unknown")
+            raw_unit = str(row.get(unit_col, "")).strip() if (unit_col and pd.notna(row.get(unit_col))) else ""
+            unit = find_unit(raw_unit) if raw_unit else find_unit(raw_fuel)
+
+        results.append(process_standard_row(f_type, qty, period, loc, unit))
+
+    return results
 
 
 def process_electricity_sheet(raw_df, default_period=""):

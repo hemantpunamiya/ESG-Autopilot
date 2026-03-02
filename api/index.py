@@ -76,6 +76,11 @@ def _do_process():
                         raw_df = pd.read_excel(io.BytesIO(data), sheet_name=s, header=None)
                     s_p = extract_period_metadata(s) if s else ""
                     sheet_context = str(s).lower() if s else ""
+                    # Try tidy/long-row format first (file-structure-agnostic)
+                    tidy_rows = try_parse_tidy(raw_df, s_p or f_p, sheet_context)
+                    if tidy_rows:
+                        all_rows.extend(tidy_rows)
+                        continue
                     if "electricity" in sheet_context:
                         all_rows.extend(process_electricity_sheet(raw_df, s_p or f_p))
                         continue
