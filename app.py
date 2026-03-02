@@ -80,7 +80,7 @@ STANDARD_COLUMNS = [
     "Period", "Location", "Site Type", "Scope", "Category", 
     "Fuel / Electricity Type", "Quantity", "Unit", "EF Original Unit", 
     "Unit Adjusted EF", "Energy Usage (GJ)", "Total Emissions (kgCO2e)", 
-    "Total Emissions (tCO2e)", "Factor Source", "Methodology"
+    "Total Emissions (tCO2e)", "Factor Source", "Methodology", "Validation Notes"
 ]
 
 EF_DATABASE = {
@@ -95,9 +95,9 @@ EF_DATABASE = {
     # EF = Density(t/KL) x NCV(GJ/t) x [CO2_EF(kg/TJ)/1000 + CH4_EF(kg/TJ)/1000*27 + N2O_EF(kg/TJ)/1000*273]
     # NCV here = energy per unit of fuel (GJ/KL or GJ/kg or GJ/SCM)
     "HSD (KL)":          {"factor": 2701.3, "ncv": 36.335, "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
-    "Furnace Oil (KL)":  {"factor": 3011.4, "ncv": 38.784, "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "Furnace Oil (KL)":  {"factor": 3010.0, "ncv": 38.784, "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
     "LDO (KL)":          {"factor": 2749.3, "ncv": 36.98,  "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
-    "Natural Gas (SCM)":  {"factor": 2.156, "ncv": 0.0384, "unit": "SCM", "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "Natural Gas (SCM)":  {"factor": 2.15, "ncv": 0.0384, "unit": "SCM", "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
     "LPG (Kg)":          {"factor": 2.987, "ncv": 0.0473, "unit": "kg",   "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
     "LSHS (KL)":         {"factor": 3042.7, "ncv": 39.188, "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
 
@@ -164,6 +164,10 @@ FUEL_MAPPING = {
 
 INDIAN_CITIES = ['nashik', 'baddi', 'goa', 'indore', 'sikkim', 'mumbai', 'delhi', 'bangalore', 'chennai', 'hyderabad', 'pune', 'gurgaon', 'noida', 'ahmedabad', 'kolkata', 'nalagarh', 'dindori', 'aurangabad', 'mahape', 'sinnar', 'taloja', 'sanpada', 'mohol']
 EXCLUDE_KW = ["total", "sum", "emission factor", "emissions tco2", "tco2e", "tco2", "ncv", "intensity", "source", "methodology", "scope", "category", "density", "gwp", "parameter", "notes", "co2e emission"]
+RENEWABLE_FUEL_TYPES = {"Biofuel (KL)", "Biodiesel (KL)", "Briquettes (Kg)"}
+EXPECTED_BASELINE_EF = {"Furnace Oil (KL)": 3010.0, "Natural Gas (SCM)": 2.15}
+LOW_QUANTITY_WARNINGS = {"HSD (KL)": 1.0, "HSD Mobile (KL)": 1.0}
+EF_ABS_TOLERANCE = 0.01
 
 # --- Intelligence Engine ---
 
@@ -225,6 +229,25 @@ def is_valid_reporting_period(period_text):
     if re.search(r"\b20\d{2}\s*[-/]\s*\d{2,4}\b", p):
         return True
     return False
+
+def build_validation_notes(f_type, period, scope, quantity, adjusted_ef, tco2e):
+    notes = []
+    expected_ef = EXPECTED_BASELINE_EF.get(f_type)
+    if expected_ef is not None and abs(adjusted_ef - expected_ef) > EF_ABS_TOLERANCE:
+        notes.append(f"EF mismatch: expected ~{expected_ef:g}, got {adjusted_ef:.4f}")
+    min_qty = LOW_QUANTITY_WARNINGS.get(f_type)
+    if min_qty is not None and 0 < quantity < min_qty:
+        notes.append(
+            f"Low quantity warning: {f_type} quantity {quantity:.4f} < {min_qty:.1f} "
+            "may be pre-calculated emissions input"
+        )
+    if f_type in RENEWABLE_FUEL_TYPES and scope != "Biogenic":
+        notes.append("Scope mismatch: biogenic fuel should be tagged as Biogenic")
+    if not is_valid_reporting_period(period):
+        notes.append("Period format warning: expected FY YYYY-YY")
+    if tco2e > 5000:
+        notes.append("High emission outlier: row exceeds 5,000 tCO2e")
+    return "; ".join(notes) if notes else "OK"
 
 def extract_custom_ef_from_header(text):
     """Extract custom EF from header text and normalize to kgCO2e/kWh when unit is explicit."""
@@ -625,14 +648,24 @@ def process_standard_row(f_type, qty, period="", loc="Unknown", u_in="N/A", ef_o
     adj = 0.001 if (u_in.lower() in ["litre", "ltr", "liter"] and ef['unit'] == "KL") else 1.0
     adj_ef = ef['factor'] * adj
     kg_co2 = q_val * adj_ef
+    t_co2 = kg_co2 / 1000
+    validation_notes = build_validation_notes(
+        f_type=f_type,
+        period=period,
+        scope=ef.get("scope", "N/A"),
+        quantity=q_val,
+        adjusted_ef=adj_ef,
+        tco2e=t_co2,
+    )
     return {
         "Period": period, "Location": validate_location(loc), "Site Type": detect_site_type(loc),
         "Scope": ef.get('scope', 'N/A'), "Category": ef.get('category', 'N/A'), "Fuel / Electricity Type": f_type,
         "Quantity": q_val, "Unit": u_in if u_in != "N/A" else ef.get('unit', 'N/A'),
         "EF Original Unit": ef.get('unit', 'N/A'), "Unit Adjusted EF": adj_ef,
         "Energy Usage (GJ)": q_val * adj * ef['ncv'], "Total Emissions (kgCO2e)": kg_co2,
-        "Total Emissions (tCO2e)": kg_co2/1000,
-        "Factor Source": ef.get('source', 'N/A'), "Methodology": ef.get('methodology', 'N/A')
+        "Total Emissions (tCO2e)": t_co2,
+        "Factor Source": ef.get('source', 'N/A'), "Methodology": ef.get('methodology', 'N/A'),
+        "Validation Notes": validation_notes
     }
 
 def safe_float(v):
@@ -769,6 +802,10 @@ if up_files:
 
     if all_rows:
         rdf = pd.DataFrame(all_rows)
+        if "Validation Notes" in rdf.columns:
+            flagged = rdf[rdf["Validation Notes"].fillna("OK") != "OK"]
+            if not flagged.empty:
+                st.warning(f"Validation flags found in {len(flagged)} row(s). Check the 'Validation Notes' column in Audit Trail.")
         yearly = build_yearly_summary_with_proxy(rdf)
         if not yearly.empty:
             latest_row = yearly.iloc[-1]

@@ -98,6 +98,10 @@ def _do_process():
         return jsonify({"error": "No processable data found.", "warnings": warnings}), 422
 
     rdf = pd.DataFrame(all_rows)
+    if "Validation Notes" in rdf.columns:
+        flagged = rdf[rdf["Validation Notes"].fillna("OK") != "OK"]
+        if not flagged.empty:
+            warnings.append(f"Validation flags found in {len(flagged)} row(s). See 'Validation Notes' in audit trail.")
     yearly = build_yearly_summary_with_proxy(rdf)
 
     if not yearly.empty:
@@ -184,5 +188,4 @@ def _do_process():
         "audit_trail": audit_records,
         "excel_b64": excel_b64,
     })
-
 
