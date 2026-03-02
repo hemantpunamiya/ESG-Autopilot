@@ -614,7 +614,7 @@ function renderResults(data) {
   // Warnings
   const wb = document.getElementById('warnings-box');
   if (data.warnings && data.warnings.length) {
-    wb.innerHTML = '<b>Warnings</b><ul style="margin-top:6px;padding-left:18px;">' +
+    wb.innerHTML = '<b>Notes</b><ul style="margin-top:6px;padding-left:18px;">' +
       data.warnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
     wb.style.display = 'block';
   } else {
