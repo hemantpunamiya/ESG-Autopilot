@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ESG AutoPilot</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=DM+Serif+Display&display=swap"
+    rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #F3EDE4;
@@ -46,14 +55,18 @@
       align-items: center;
       gap: 12px;
       height: 60px;
-      position: sticky; top: 0; z-index: 100;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
+
     nav .logo {
       font-family: 'DM Serif Display', serif;
       font-size: 1.3rem;
       color: var(--text);
       letter-spacing: -.01em;
     }
+
     nav .badge {
       font-size: .68rem;
       background: var(--black);
@@ -66,7 +79,11 @@
     }
 
     /* ---- LAYOUT ---- */
-    .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px;
+    }
 
     /* ---- TEMPLATE BANNER ---- */
     .template-banner {
@@ -80,30 +97,60 @@
       margin-bottom: 18px;
       gap: 16px;
     }
+
     .template-text {
-      display: flex; align-items: center; gap: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
+
     .template-icon {
-      width: 42px; height: 42px;
+      width: 42px;
+      height: 42px;
       background: var(--olive-light);
       border-radius: var(--radius-sm);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1.2rem;
     }
-    .template-text strong { display: block; color: var(--text); font-size: .92rem; font-weight: 600; }
-    .template-sub { font-size: .8rem; color: var(--text-light); margin-top: 2px; }
+
+    .template-text strong {
+      display: block;
+      color: var(--text);
+      font-size: .92rem;
+      font-weight: 600;
+    }
+
+    .template-sub {
+      font-size: .8rem;
+      color: var(--text-light);
+      margin-top: 2px;
+    }
+
     .btn-template {
       white-space: nowrap;
       background: var(--black);
-      color: #fff; border: none; border-radius: var(--radius-pill);
-      padding: 10px 22px; font-size: .85rem; font-weight: 600;
-      cursor: pointer; transition: all .2s;
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-pill);
+      padding: 10px 22px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
       font-family: inherit;
     }
-    .btn-template:hover { background: #333; }
+
+    .btn-template:hover {
+      background: #333;
+    }
 
     /* ---- UPLOAD ZONE ---- */
-    #upload-section { margin-bottom: 28px; }
+    #upload-section {
+      margin-bottom: 28px;
+    }
+
     .drop-zone {
       border: 2px dashed var(--border);
       border-radius: var(--radius);
@@ -113,70 +160,142 @@
       cursor: pointer;
       transition: border-color .2s, background .2s;
     }
-    .drop-zone:hover, .drop-zone.drag-over {
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
       border-color: var(--accent);
       background: var(--accent-light);
     }
-    .drop-zone .icon { font-size: 2.5rem; margin-bottom: 14px; }
-    .drop-zone h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-    .drop-zone p  { font-size: .85rem; color: var(--text-light); line-height: 1.6; }
-    .drop-zone input[type=file] { display: none; }
 
-    #file-list { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .drop-zone .icon {
+      font-size: 2.5rem;
+      margin-bottom: 14px;
+    }
+
+    .drop-zone h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .drop-zone p {
+      font-size: .85rem;
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+    .drop-zone input[type=file] {
+      display: none;
+    }
+
+    #file-list {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .file-chip {
-      background: var(--olive-light); border: 1px solid #C8D3B8;
-      color: var(--olive); border-radius: var(--radius-pill);
-      font-size: .8rem; padding: 5px 14px; font-weight: 600;
+      background: var(--olive-light);
+      border: 1px solid #C8D3B8;
+      color: var(--olive);
+      border-radius: var(--radius-pill);
+      font-size: .8rem;
+      padding: 5px 14px;
+      font-weight: 600;
     }
 
     .btn-primary {
-      display: inline-flex; align-items: center; gap: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       margin-top: 16px;
       background: var(--black);
-      color: #fff; border: none; border-radius: var(--radius-pill);
-      padding: 12px 28px; font-size: .9rem; font-weight: 600;
-      cursor: pointer; transition: all .2s;
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-pill);
+      padding: 12px 28px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
       font-family: inherit;
     }
-    .btn-primary:disabled { opacity: .35; cursor: not-allowed; }
-    .btn-primary:hover:not(:disabled) { background: #333; }
+
+    .btn-primary:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #333;
+    }
 
     /* ---- SPINNER ---- */
-    #spinner { display: none; text-align: center; padding: 48px; }
+    #spinner {
+      display: none;
+      text-align: center;
+      padding: 48px;
+    }
+
     .spinner-ring {
-      display: inline-block; width: 44px; height: 44px;
+      display: inline-block;
+      width: 44px;
+      height: 44px;
       border: 3px solid var(--border);
       border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin .8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* ---- WARNINGS ---- */
     #warnings-box {
       display: none;
-      background: #FEF7EC; border: 1px solid #EAD5A8;
-      border-radius: var(--radius-sm); padding: 14px 18px;
-      margin-bottom: 16px; font-size: .84rem; color: #7A5C28;
+      background: #FEF7EC;
+      border: 1px solid #EAD5A8;
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      font-size: .84rem;
+      color: #7A5C28;
     }
 
     /* ---- HERO ---- */
     .hero {
       background: var(--black);
-      color: #fff; padding: 22px 26px; border-radius: var(--radius);
+      color: #fff;
+      padding: 22px 26px;
+      border-radius: var(--radius);
       margin-bottom: 22px;
     }
+
     .hero h2 {
       font-family: 'DM Serif Display', serif;
-      font-size: 1.4rem; margin-bottom: 4px; font-weight: 400;
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+      font-weight: 400;
     }
-    .hero p { opacity: .7; font-size: .88rem; }
+
+    .hero p {
+      opacity: .7;
+      font-size: .88rem;
+    }
 
     /* ---- TABS ---- */
     .tab-bar {
-      display: flex; gap: 6px; margin-bottom: 22px;
+      display: flex;
+      gap: 6px;
+      margin-bottom: 22px;
       flex-wrap: wrap;
     }
+
     .tabs-actions {
       display: flex;
       align-items: center;
@@ -185,699 +304,856 @@
       flex-wrap: wrap;
       margin-bottom: 10px;
     }
+
     .tab-btn {
-      padding: 8px 18px; border: 1px solid var(--border); background: var(--bg-white);
-      border-radius: var(--radius-pill); font-size: .82rem; font-weight: 600;
-      color: var(--text-mid); cursor: pointer; transition: all .15s;
-      white-space: nowrap; font-family: inherit;
+      padding: 8px 18px;
+      border: 1px solid var(--border);
+      background: var(--bg-white);
+      border-radius: var(--radius-pill);
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+      font-family: inherit;
     }
-    .tab-btn:hover { border-color: var(--text-mid); }
+
+    .tab-btn:hover {
+      border-color: var(--text-mid);
+    }
+
     .tab-btn.active {
-      background: var(--black); color: #fff;
+      background: var(--black);
+      color: #fff;
       border-color: var(--black);
     }
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
 
     /* ---- CARDS 3x3 MATRIX ---- */
     .card-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px; margin-bottom: 22px;
+      gap: 14px;
+      margin-bottom: 22px;
     }
+
     .card-grid .col-head {
-      font-size: .7rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .08em; color: var(--text-light);
-      padding: 0 4px 6px; border-bottom: 1px solid var(--border);
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-light);
+      padding: 0 4px 6px;
+      border-bottom: 1px solid var(--border);
       margin-bottom: -4px;
     }
+
     .card {
-      background: var(--bg-white); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 18px 20px;
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
     }
+
     .card .label {
-      font-size: .72rem; color: var(--text-light); font-weight: 600;
-      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
+      font-size: .72rem;
+      color: var(--text-light);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 8px;
     }
+
     .card .value {
       font-family: 'DM Serif Display', serif;
-      font-size: 1.5rem; font-weight: 400; color: var(--text);
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--text);
     }
+
     .card .delta {
-      font-size: .76rem; color: var(--accent);
-      margin-top: 6px; font-weight: 600;
+      font-size: .76rem;
+      color: var(--accent);
+      margin-top: 6px;
+      font-weight: 600;
     }
-    .card.sub { border-left: 3px solid var(--olive); }
+
+    .card.sub {
+      border-left: 3px solid var(--olive);
+    }
+
     @media (max-width: 700px) {
-      .card-grid { grid-template-columns: 1fr; }
-      .card-grid .col-head { display: none; }
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-grid .col-head {
+        display: none;
+      }
     }
 
     /* ---- CHART CANVAS ---- */
     .chart-wrap {
-      background: var(--bg-white); border: 1px solid var(--border);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 22px; margin-bottom: 16px;
+      padding: 22px;
+      margin-bottom: 16px;
     }
+
     .chart-wrap h4 {
-      font-size: .88rem; color: var(--text-mid);
-      font-weight: 600; margin-bottom: 16px;
+      font-size: .88rem;
+      color: var(--text-mid);
+      font-weight: 600;
+      margin-bottom: 16px;
     }
-    .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .chart-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
 
     /* ---- TABLES ---- */
     .tbl-wrap {
-      background: var(--bg-white); border: 1px solid var(--border);
+      background: var(--bg-white);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      overflow: hidden; margin-bottom: 16px;
+      overflow: hidden;
+      margin-bottom: 16px;
     }
+
     .tbl-wrap h4 {
-      font-size: .88rem; color: var(--text-mid); font-weight: 600;
-      padding: 16px 20px; border-bottom: 1px solid var(--border-light);
+      font-size: .88rem;
+      color: var(--text-mid);
+      font-weight: 600;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-light);
     }
-    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+
     thead th {
-      background: var(--bg-card); text-align: left;
-      padding: 10px 16px; font-weight: 600;
-      color: var(--text-mid); border-bottom: 1px solid var(--border-light);
+      background: var(--bg-card);
+      text-align: left;
+      padding: 10px 16px;
+      font-weight: 600;
+      color: var(--text-mid);
+      border-bottom: 1px solid var(--border-light);
       white-space: nowrap;
     }
-    tbody td { padding: 10px 16px; border-bottom: 1px solid var(--border-light); color: var(--text); }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: #FAF8F4; }
+
+    tbody td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover td {
+      background: #FAF8F4;
+    }
 
     /* ---- DOWNLOAD BTN ---- */
     .btn-dl {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--bg-white); border: 1px solid var(--black); color: var(--black);
-      border-radius: var(--radius-pill); padding: 10px 22px;
-      font-size: .85rem; font-weight: 600; cursor: pointer;
-      transition: all .15s; font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-white);
+      border: 1px solid var(--black);
+      color: var(--black);
+      border-radius: var(--radius-pill);
+      padding: 10px 22px;
+      font-size: .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      font-family: inherit;
     }
+
     .btn-dl.big {
       padding: 13px 28px;
       font-size: .95rem;
       font-weight: 700;
       min-height: 46px;
     }
-    .btn-dl:hover { background: var(--black); color: #fff; }
+
+    .btn-dl:hover {
+      background: var(--black);
+      color: #fff;
+    }
 
     /* ---- INFO BOX ---- */
     .info-box {
-      background: var(--olive-light); border: 1px solid #C8D3B8;
-      border-radius: var(--radius-sm); padding: 12px 16px;
-      font-size: .84rem; color: var(--olive); margin-bottom: 14px;
+      background: var(--olive-light);
+      border: 1px solid #C8D3B8;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: .84rem;
+      color: var(--olive);
+      margin-bottom: 14px;
     }
 
     /* ---- SCROLLABLE AUDIT ---- */
-    .audit-scroll { max-height: 480px; overflow-y: auto; }
+    .audit-scroll {
+      max-height: 480px;
+      overflow-y: auto;
+    }
 
     /* ---- TYPE BADGES IN TABLE ---- */
     .badge-actual {
-      background: var(--olive-light); color: var(--olive);
-      padding: 3px 10px; border-radius: var(--radius-pill);
-      font-size: .72rem; font-weight: 700;
+      background: var(--olive-light);
+      color: var(--olive);
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-size: .72rem;
+      font-weight: 700;
     }
+
     .badge-proxy {
-      background: #FEF3C7; color: #92400E;
-      padding: 3px 10px; border-radius: var(--radius-pill);
-      font-size: .72rem; font-weight: 700;
+      background: #FEF3C7;
+      color: #92400E;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-size: .72rem;
+      font-weight: 700;
     }
 
     @media (max-width: 640px) {
-      .chart-row { grid-template-columns: 1fr; }
-      .tab-btn { font-size: .74rem; padding: 7px 12px; }
-      .template-banner { flex-direction: column; align-items: flex-start; }
+      .chart-row {
+        grid-template-columns: 1fr;
+      }
+
+      .tab-btn {
+        font-size: .74rem;
+        padding: 7px 12px;
+      }
+
+      .template-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<nav style="flex-direction: column; align-items: flex-start; justify-content: center; height: auto; padding: 12px 28px;">
-  <div style="display: flex; align-items: center; gap: 12px;">
-    <span class="logo">ESG AutoPilot</span>
-    <span class="badge">Enterprise</span>
-  </div>
-  <span style="font-size: 0.85rem; color: var(--text-mid); font-weight: 600; margin-top: 4px; letter-spacing: 0.02em;">GHG SCOPE 1 AND 2 EMISSIONS CALCULATOR</span>
-</nav>
+  <nav
+    style="flex-direction: column; align-items: flex-start; justify-content: center; height: auto; padding: 12px 28px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span class="logo">ESG AutoPilot</span>
+      <span class="badge">Enterprise</span>
+    </div>
+    <span
+      style="font-size: 0.85rem; color: var(--text-mid); font-weight: 600; margin-top: 4px; letter-spacing: 0.02em;">GHG
+      SCOPE 1 AND 2 EMISSIONS CALCULATOR</span>
+  </nav>
 
-<div class="container">
+  <div class="container">
 
-  <!-- Upload Section -->
-  <div id="upload-section">
-    <!-- Template Download Banner -->
-    <div class="template-banner" style="align-items: center;">
-      <div class="template-text">
-        <span class="template-icon">📋</span>
-        <div>
-          <strong style="text-transform: uppercase; font-size: 0.85rem; line-height: 1.4;">INSTRUCTIONS: DOWNLOAD TEMPLATE. ENTER THE YEAR AND DATA (CURRENTLY SUPPORTS ONLY ANNUAL DATA) AND GET YOUR EMISSIONS FILE VERIFIABLE EXCEL IMMEDIATELY WHICH IS AUDIT READY</strong>
+    <!-- Upload Section -->
+    <div id="upload-section">
+      <!-- Template Download Banner -->
+      <div class="template-banner" style="align-items: center;">
+        <div class="template-text">
+          <span class="template-icon">📋</span>
+          <div>
+            <strong style="text-transform: uppercase; font-size: 0.85rem; line-height: 1.4;">INSTRUCTIONS: DOWNLOAD
+              TEMPLATE. ENTER THE YEAR AND DATA (CURRENTLY SUPPORTS ONLY ANNUAL DATA) AND GET YOUR EMISSIONS FILE
+              VERIFIABLE EXCEL IMMEDIATELY WHICH IS AUDIT READY</strong>
+          </div>
         </div>
+        <button class="btn-template" onclick="window.location.href='/api/template'">
+          Download Template
+        </button>
       </div>
-      <button class="btn-template" onclick="window.location.href='/api/template'">
-        Download Template
+
+      <div class="drop-zone" id="drop-zone">
+        <div class="icon">📂</div>
+        <h3>Upload your ESG data files</h3>
+        <p>Drag &amp; Drop Excel (.xlsx / .xls) or CSV files here, or click to browse.<br>
+          You can even <strong>Upload one file per site</strong> — all locations will be merged automatically into one
+          single consolidated emissions file.</p>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple />
+      </div>
+      <div id="file-list"></div>
+      <button class="btn-primary" id="process-btn" disabled>
+        Process Files
       </button>
     </div>
 
-    <div class="drop-zone" id="drop-zone">
-      <div class="icon">📂</div>
-      <h3>Upload your ESG data files</h3>
-      <p>Drag &amp; drop Excel (.xlsx / .xls) or CSV files here, or click to browse.<br>
-         <strong>Upload one file per site</strong> — all locations are merged automatically.</p>
-      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" multiple />
-    </div>
-    <div id="file-list"></div>
-    <button class="btn-primary" id="process-btn" disabled>
-      Process Files
-    </button>
-  </div>
-
-  <!-- Spinner -->
-  <div id="spinner">
-    <div class="spinner-ring"></div>
-    <p style="margin-top:14px;color:var(--text-light);font-size:.9rem;">Processing your ESG data&hellip;</p>
-  </div>
-
-  <!-- Results -->
-  <div id="results" style="display:none;">
-
-    <div id="warnings-box"></div>
-
-    <div class="hero" id="hero-bar">
-      <h2>ESG Performance Dashboard</h2>
-      <p id="hero-period">Latest reporting period: —</p>
+    <!-- Spinner -->
+    <div id="spinner">
+      <div class="spinner-ring"></div>
+      <p style="margin-top:14px;color:var(--text-light);font-size:.9rem;">Processing your ESG data&hellip;</p>
     </div>
 
-    <div class="tabs-actions">
-      <div class="tab-bar">
-        <button class="tab-btn active" data-tab="highlights">Highlights</button>
-        <button class="tab-btn" data-tab="trends">Year-wise Trends</button>
-        <button class="tab-btn" data-tab="scope">Scope Analysis</button>
-        <button class="tab-btn" data-tab="energy">Energy Mix</button>
-        <button class="tab-btn" data-tab="renewable">Renewable Progression</button>
-        <button class="tab-btn" data-tab="audit">Audit Trail</button>
+    <!-- Results -->
+    <div id="results" style="display:none;">
+
+      <div id="warnings-box"></div>
+
+      <div class="hero" id="hero-bar">
+        <h2>ESG Performance Dashboard</h2>
+        <p id="hero-period">Latest reporting period: —</p>
       </div>
-      <button class="btn-dl big" id="download-btn">Download Excel</button>
-    </div>
 
-    <!-- Highlights -->
-    <div class="tab-panel active" id="tab-highlights">
-      <div class="card-grid" id="kpi-cards"></div>
-    </div>
-
-    <!-- Trends -->
-    <div class="tab-panel" id="tab-trends">
-      <div class="chart-row">
-        <div class="chart-wrap">
-          <h4>Emissions Trend (tCO2e)</h4>
-          <canvas id="chart-emissions"></canvas>
+      <div class="tabs-actions">
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="highlights">Highlights</button>
+          <button class="tab-btn" data-tab="trends">Year-wise Trends</button>
+          <button class="tab-btn" data-tab="scope">Scope Analysis</button>
+          <button class="tab-btn" data-tab="energy">Energy Mix</button>
+          <button class="tab-btn" data-tab="renewable">Renewable Progression</button>
+          <button class="tab-btn" data-tab="audit">Audit Trail</button>
         </div>
-        <div class="chart-wrap">
-          <h4>Energy Trend (GJ)</h4>
-          <canvas id="chart-energy"></canvas>
+        <button class="btn-dl big" id="download-btn">Download Excel</button>
+      </div>
+
+      <!-- Highlights -->
+      <div class="tab-panel active" id="tab-highlights">
+        <div class="card-grid" id="kpi-cards"></div>
+      </div>
+
+      <!-- Trends -->
+      <div class="tab-panel" id="tab-trends">
+        <div class="chart-row">
+          <div class="chart-wrap">
+            <h4>Emissions Trend (tCO2e)</h4>
+            <canvas id="chart-emissions"></canvas>
+          </div>
+          <div class="chart-wrap">
+            <h4>Energy Trend (GJ)</h4>
+            <canvas id="chart-energy"></canvas>
+          </div>
+        </div>
+        <div class="info-box" id="proxy-note" style="display:none;">
+          Proxy years are filled with 5% lower values than the next available FY.
+        </div>
+        <div class="tbl-wrap">
+          <h4>Year-wise Summary</h4>
+          <div class="audit-scroll">
+            <table id="tbl-yearly">
+              <thead>
+                <tr>
+                  <th>Period</th>
+                  <th>Type</th>
+                  <th>Total tCO2e</th>
+                  <th>Scope 1</th>
+                  <th>Scope 2</th>
+                  <th>Energy GJ</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div class="info-box" id="proxy-note" style="display:none;">
-        Proxy years are filled with 5% lower values than the next available FY.
-      </div>
-      <div class="tbl-wrap">
-        <h4>Year-wise Summary</h4>
-        <div class="audit-scroll">
-          <table id="tbl-yearly">
+
+      <!-- Scope Analysis -->
+      <div class="tab-panel" id="tab-scope">
+        <div class="chart-wrap" style="max-width:500px;">
+          <h4>Emissions by Scope (tCO2e)</h4>
+          <canvas id="chart-scope"></canvas>
+        </div>
+        <div class="tbl-wrap">
+          <h4>Scope Breakdown</h4>
+          <table id="tbl-scope">
             <thead>
-              <tr><th>Period</th><th>Type</th><th>Total tCO2e</th><th>Scope 1</th><th>Scope 2</th><th>Energy GJ</th></tr>
+              <tr>
+                <th>Scope</th>
+                <th>Total Emissions (tCO2e)</th>
+              </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
       </div>
-    </div>
 
-    <!-- Scope Analysis -->
-    <div class="tab-panel" id="tab-scope">
-      <div class="chart-wrap" style="max-width:500px;">
-        <h4>Emissions by Scope (tCO2e)</h4>
-        <canvas id="chart-scope"></canvas>
-      </div>
-      <div class="tbl-wrap">
-        <h4>Scope Breakdown</h4>
-        <table id="tbl-scope">
-          <thead><tr><th>Scope</th><th>Total Emissions (tCO2e)</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Energy Mix -->
-    <div class="tab-panel" id="tab-energy">
-      <div class="chart-wrap" style="max-width:480px;">
-        <h4>Renewable vs Non-Renewable Energy (GJ)</h4>
-        <canvas id="chart-mix"></canvas>
-      </div>
-      <div class="tbl-wrap">
-        <h4>Top Fuel Types by Energy (GJ)</h4>
-        <table id="tbl-fuel">
-          <thead><tr><th>Fuel / Electricity Type</th><th>Energy Usage (GJ)</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Renewable Progression -->
-    <div class="tab-panel" id="tab-renewable">
-      <div class="chart-wrap">
-        <h4>Year-wise Renewable Progression (%)</h4>
-        <canvas id="chart-renewable-progression"></canvas>
-      </div>
-      <div class="tbl-wrap">
-        <h4>Renewable Progression Summary</h4>
-        <table id="tbl-renewable-progression">
-          <thead>
-            <tr><th>Period</th><th>Renewable Energy %</th><th>Renewable Fuel %</th><th>Renewable Electricity %</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Audit Trail -->
-    <div class="tab-panel" id="tab-audit">
-      <div class="tbl-wrap">
-        <h4>Full Audit Trail</h4>
-        <div class="audit-scroll" style="overflow-x:auto;">
-          <table id="tbl-audit">
-            <thead><tr id="audit-head"></tr></thead>
-            <tbody id="audit-body"></tbody>
+      <!-- Energy Mix -->
+      <div class="tab-panel" id="tab-energy">
+        <div class="chart-wrap" style="max-width:480px;">
+          <h4>Renewable vs Non-Renewable Energy (GJ)</h4>
+          <canvas id="chart-mix"></canvas>
+        </div>
+        <div class="tbl-wrap">
+          <h4>Top Fuel Types by Energy (GJ)</h4>
+          <table id="tbl-fuel">
+            <thead>
+              <tr>
+                <th>Fuel / Electricity Type</th>
+                <th>Energy Usage (GJ)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
           </table>
         </div>
       </div>
-    </div>
 
-  </div><!-- /results -->
-</div><!-- /container -->
+      <!-- Renewable Progression -->
+      <div class="tab-panel" id="tab-renewable">
+        <div class="chart-wrap">
+          <h4>Year-wise Renewable Progression (%)</h4>
+          <canvas id="chart-renewable-progression"></canvas>
+        </div>
+        <div class="tbl-wrap">
+          <h4>Renewable Progression Summary</h4>
+          <table id="tbl-renewable-progression">
+            <thead>
+              <tr>
+                <th>Period</th>
+                <th>Renewable Energy %</th>
+                <th>Renewable Fuel %</th>
+                <th>Renewable Electricity %</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
 
-<script>
-// ---------- File picker ----------
-const dropZone   = document.getElementById('drop-zone');
-const fileInput  = document.getElementById('file-input');
-const fileList   = document.getElementById('file-list');
-const processBtn = document.getElementById('process-btn');
-let selectedFiles = [];
+      <!-- Audit Trail -->
+      <div class="tab-panel" id="tab-audit">
+        <div class="tbl-wrap">
+          <h4>Full Audit Trail</h4>
+          <div class="audit-scroll" style="overflow-x:auto;">
+            <table id="tbl-audit">
+              <thead>
+                <tr id="audit-head"></tr>
+              </thead>
+              <tbody id="audit-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
-dropZone.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', e => addFiles(e.target.files));
+    </div><!-- /results -->
+  </div><!-- /container -->
 
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave',  () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault(); dropZone.classList.remove('drag-over');
-  addFiles(e.dataTransfer.files);
-});
+  <script>
+    // ---------- File picker ----------
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+    const processBtn = document.getElementById('process-btn');
+    let selectedFiles = [];
 
-function addFiles(newFiles) {
-  for (const f of newFiles) {
-    if (!selectedFiles.find(x => x.name === f.name)) selectedFiles.push(f);
-  }
-  renderFileChips();
-}
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => addFiles(e.target.files));
 
-function renderFileChips() {
-  fileList.innerHTML = selectedFiles.map(f =>
-    `<span class="file-chip">${f.name}</span>`
-  ).join('');
-  processBtn.disabled = selectedFiles.length === 0;
-}
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault(); dropZone.classList.remove('drag-over');
+      addFiles(e.dataTransfer.files);
+    });
 
-// ---------- Process ----------
-let excelB64 = null;
-let chartInstances = {};
-if (window.ChartDataLabels) {
-  Chart.register(window.ChartDataLabels);
-}
-
-processBtn.addEventListener('click', async () => {
-  if (!selectedFiles.length) return;
-
-  const fd = new FormData();
-  selectedFiles.forEach(f => fd.append('files', f));
-
-  document.getElementById('upload-section').style.display = 'none';
-  document.getElementById('spinner').style.display = 'block';
-  document.getElementById('results').style.display = 'none';
-
-  try {
-    const res = await fetch('/api/process', { method: 'POST', body: fd });
-    const data = await res.json();
-
-    document.getElementById('spinner').style.display = 'none';
-
-    if (!res.ok) {
-      alert('Error: ' + (data.error || 'Processing failed'));
-      document.getElementById('upload-section').style.display = 'block';
-      return;
+    function addFiles(newFiles) {
+      for (const f of newFiles) {
+        if (!selectedFiles.find(x => x.name === f.name)) selectedFiles.push(f);
+      }
+      renderFileChips();
     }
 
-    renderResults(data);
-  } catch (err) {
-    document.getElementById('spinner').style.display = 'none';
-    alert('Network error: ' + err.message);
-    document.getElementById('upload-section').style.display = 'block';
-  }
-});
+    function renderFileChips() {
+      fileList.innerHTML = selectedFiles.map(f =>
+        `<span class="file-chip">${f.name}</span>`
+      ).join('');
+      processBtn.disabled = selectedFiles.length === 0;
+    }
 
-function fmt(n, dec=2) {
-  if (n == null) return '\u2014';
-  return Number(n).toLocaleString('en-IN', {minimumFractionDigits: dec, maximumFractionDigits: dec});
-}
-function fmtPct(n, dec=1) {
-  if (n == null) return '\u2014';
-  return `${fmt(n, dec)}%`;
-}
-function asNum(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-function parseFyStart(period) {
-  const m = String(period || '').match(/FY\s*(20\d{2})\s*[-/]\s*(\d{2,4})/i);
-  return m ? Number(m[1]) : null;
-}
-function calcRenewableProgression(auditTrail) {
-  const renewableElec = new Set([
-    'Renewable Electricity (kWh)', 'Solar (kWh)', 'Wind (kWh)', 'Hydel (kWh)', 'Custom Renewable Electricity (kWh)'
-  ]);
-  const renewableFuel = new Set(['Biofuel (KL)', 'Biodiesel (KL)', 'Briquettes (Kg)']);
-  const grid = new Set(['Grid Electricity (kWh)']);
-  const fossilFuel = new Set(['HSD (KL)', 'HSD Mobile (KL)', 'Furnace Oil (KL)', 'LDO (KL)', 'Natural Gas (SCM)', 'LPG (Kg)', 'LSHS (KL)', 'Petrol (KL)']);
+    // ---------- Process ----------
+    let excelB64 = null;
+    let chartInstances = {};
+    if (window.ChartDataLabels) {
+      Chart.register(window.ChartDataLabels);
+    }
 
-  const byPeriod = {};
-  for (const r of (auditTrail || [])) {
-    const p = r.Period;
-    const fuel = r['Fuel / Electricity Type'];
-    if (!p || !fuel) continue;
-    const e = asNum(r['Energy Usage (GJ)']);
-    if (!byPeriod[p]) byPeriod[p] = { total: 0, renE: 0, renF: 0, renEB: 0, renFB: 0 };
-    byPeriod[p].total += e;
-    if (renewableElec.has(fuel)) byPeriod[p].renE += e;
-    if (renewableFuel.has(fuel)) byPeriod[p].renF += e;
-    if (renewableElec.has(fuel) || grid.has(fuel)) byPeriod[p].renEB += e;
-    if (renewableFuel.has(fuel) || fossilFuel.has(fuel)) byPeriod[p].renFB += e;
-  }
+    processBtn.addEventListener('click', async () => {
+      if (!selectedFiles.length) return;
 
-  return Object.keys(byPeriod)
-    .map(p => {
-      const s = byPeriod[p];
-      const ren = s.renE + s.renF;
-      return {
-        Period: p,
-        fyStart: parseFyStart(p),
-        renewable_energy_pct: s.total ? (ren / s.total) * 100 : 0,
-        renewable_fuel_pct: s.renFB ? (s.renF / s.renFB) * 100 : 0,
-        renewable_electricity_pct: s.renEB ? (s.renE / s.renEB) * 100 : 0
-      };
-    })
-    .filter(r => r.fyStart !== null)
-    .sort((a, b) => a.fyStart - b.fyStart);
-}
+      const fd = new FormData();
+      selectedFiles.forEach(f => fd.append('files', f));
 
-// ---------- Chart palette ----------
-const PALETTE = {
-  dark:   '#1A1A1A',
-  accent: '#D4764E',
-  olive:  '#5A7247',
-  warm:   '#C4956A',
-  sand:   '#D4C5A9',
-  sage:   '#8FA87E',
-  clay:   '#B07C62',
-  slate:  '#7A8B8F',
-};
+      document.getElementById('upload-section').style.display = 'none';
+      document.getElementById('spinner').style.display = 'block';
+      document.getElementById('results').style.display = 'none';
 
-function renderResults(data) {
-  excelB64 = data.excel_b64;
+      try {
+        const res = await fetch('/api/process', { method: 'POST', body: fd });
+        const data = await res.json();
 
-  // Warnings
-  const wb = document.getElementById('warnings-box');
-  if (data.warnings && data.warnings.length) {
-    wb.innerHTML = '<b>Notes</b><ul style="margin-top:6px;padding-left:18px;">' +
-      data.warnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
-    wb.style.display = 'block';
-  } else {
-    wb.innerHTML = '';
-    wb.style.display = 'none';
-  }
+        document.getElementById('spinner').style.display = 'none';
 
-  // Hero
-  document.getElementById('hero-period').textContent = 'Latest reporting period: ' + data.latest_period;
+        if (!res.ok) {
+          alert('Error: ' + (data.error || 'Processing failed'));
+          document.getElementById('upload-section').style.display = 'block';
+          return;
+        }
 
-  // KPI cards
-  const k = data.kpis;
-  const deltaStr = k.delta_total != null
-    ? `${k.delta_total >= 0 ? '+' : ''}${fmt(k.delta_total, 0)} vs prev FY` : null;
-  const deltaEn  = k.delta_energy != null
-    ? `${k.delta_energy >= 0 ? '+' : ''}${fmt(k.delta_energy,0)} GJ vs prev FY` : null;
+        renderResults(data);
+      } catch (err) {
+        document.getElementById('spinner').style.display = 'none';
+        alert('Network error: ' + err.message);
+        document.getElementById('upload-section').style.display = 'block';
+      }
+    });
 
-  // 3x3 matrix: Emissions | Energy | Percentages
-  document.getElementById('kpi-cards').innerHTML = `
+    function fmt(n, dec = 2) {
+      if (n == null) return '\u2014';
+      return Number(n).toLocaleString('en-IN', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    }
+    function fmtPct(n, dec = 1) {
+      if (n == null) return '\u2014';
+      return `${fmt(n, dec)}%`;
+    }
+    function asNum(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+    function parseFyStart(period) {
+      const m = String(period || '').match(/FY\s*(20\d{2})\s*[-/]\s*(\d{2,4})/i);
+      return m ? Number(m[1]) : null;
+    }
+    function calcRenewableProgression(auditTrail) {
+      const renewableElec = new Set([
+        'Renewable Electricity (kWh)', 'Solar (kWh)', 'Wind (kWh)', 'Hydel (kWh)', 'Custom Renewable Electricity (kWh)'
+      ]);
+      const renewableFuel = new Set(['Biofuel (KL)', 'Biodiesel (KL)', 'Briquettes (Kg)']);
+      const grid = new Set(['Grid Electricity (kWh)']);
+      const fossilFuel = new Set(['HSD (KL)', 'HSD Mobile (KL)', 'Furnace Oil (KL)', 'LDO (KL)', 'Natural Gas (SCM)', 'LPG (Kg)', 'LSHS (KL)', 'Petrol (KL)']);
+
+      const byPeriod = {};
+      for (const r of (auditTrail || [])) {
+        const p = r.Period;
+        const fuel = r['Fuel / Electricity Type'];
+        if (!p || !fuel) continue;
+        const e = asNum(r['Energy Usage (GJ)']);
+        if (!byPeriod[p]) byPeriod[p] = { total: 0, renE: 0, renF: 0, renEB: 0, renFB: 0 };
+        byPeriod[p].total += e;
+        if (renewableElec.has(fuel)) byPeriod[p].renE += e;
+        if (renewableFuel.has(fuel)) byPeriod[p].renF += e;
+        if (renewableElec.has(fuel) || grid.has(fuel)) byPeriod[p].renEB += e;
+        if (renewableFuel.has(fuel) || fossilFuel.has(fuel)) byPeriod[p].renFB += e;
+      }
+
+      return Object.keys(byPeriod)
+        .map(p => {
+          const s = byPeriod[p];
+          const ren = s.renE + s.renF;
+          return {
+            Period: p,
+            fyStart: parseFyStart(p),
+            renewable_energy_pct: s.total ? (ren / s.total) * 100 : 0,
+            renewable_fuel_pct: s.renFB ? (s.renF / s.renFB) * 100 : 0,
+            renewable_electricity_pct: s.renEB ? (s.renE / s.renEB) * 100 : 0
+          };
+        })
+        .filter(r => r.fyStart !== null)
+        .sort((a, b) => a.fyStart - b.fyStart);
+    }
+
+    // ---------- Chart palette ----------
+    const PALETTE = {
+      dark: '#1A1A1A',
+      accent: '#D4764E',
+      olive: '#5A7247',
+      warm: '#C4956A',
+      sand: '#D4C5A9',
+      sage: '#8FA87E',
+      clay: '#B07C62',
+      slate: '#7A8B8F',
+    };
+
+    function renderResults(data) {
+      excelB64 = data.excel_b64;
+
+      // Warnings
+      const wb = document.getElementById('warnings-box');
+      if (data.warnings && data.warnings.length) {
+        wb.innerHTML = '<b>Notes</b><ul style="margin-top:6px;padding-left:18px;">' +
+          data.warnings.map(w => `<li>${w}</li>`).join('') + '</ul>';
+        wb.style.display = 'block';
+      } else {
+        wb.innerHTML = '';
+        wb.style.display = 'none';
+      }
+
+      // Hero
+      document.getElementById('hero-period').textContent = 'Latest reporting period: ' + data.latest_period;
+
+      // KPI cards
+      const k = data.kpis;
+      const deltaStr = k.delta_total != null
+        ? `${k.delta_total >= 0 ? '+' : ''}${fmt(k.delta_total, 0)} vs prev FY` : null;
+      const deltaEn = k.delta_energy != null
+        ? `${k.delta_energy >= 0 ? '+' : ''}${fmt(k.delta_energy, 0)} GJ vs prev FY` : null;
+
+      // 3x3 matrix: Emissions | Energy | Percentages
+      document.getElementById('kpi-cards').innerHTML = `
     <div class="col-head">Emissions (tCO2e)</div>
     <div class="col-head">Energy (GJ)</div>
     <div class="col-head">Renewable Mix</div>
 
-    ${card('Total Emissions', fmt(k.total_emissions,0), deltaStr)}
-    ${card('Total Energy', fmt(k.total_energy_gj,0), deltaEn)}
-    ${card('Renewable Energy %', fmt(k.renewable_energy_pct,0) + '%')}
+    ${card('Total Emissions', fmt(k.total_emissions, 0), deltaStr)}
+    ${card('Total Energy', fmt(k.total_energy_gj, 0), deltaEn)}
+    ${card('Renewable Energy %', fmt(k.renewable_energy_pct, 0) + '%')}
 
-    ${card('Scope 1', fmt(k.scope1_emissions,0), null, true)}
-    ${card('Renewable', fmt(k.renewable_gj,0), null, true)}
-    ${card('Renewable Fuel %', fmt(k.renewable_fuel_pct,0) + '%', null, true)}
+    ${card('Scope 1', fmt(k.scope1_emissions, 0), null, true)}
+    ${card('Renewable', fmt(k.renewable_gj, 0), null, true)}
+    ${card('Renewable Fuel %', fmt(k.renewable_fuel_pct, 0) + '%', null, true)}
 
-    ${card('Scope 2', fmt(k.scope2_emissions,0), null, true)}
-    ${card('Non-Renewable', fmt(k.non_renewable_gj,0), null, true)}
-    ${card('Renewable Electricity %', fmt(k.renewable_electricity_pct,0) + '%', null, true)}
+    ${card('Scope 2', fmt(k.scope2_emissions, 0), null, true)}
+    ${card('Non-Renewable', fmt(k.non_renewable_gj, 0), null, true)}
+    ${card('Renewable Electricity %', fmt(k.renewable_electricity_pct, 0) + '%', null, true)}
   `;
 
-  // --- Yearly trend table & charts ---
-  const trend = data.yearly_trend || [];
-  const tbl = document.querySelector('#tbl-yearly tbody');
-  tbl.innerHTML = trend.map(r => `<tr>
+      // --- Yearly trend table & charts ---
+      const trend = data.yearly_trend || [];
+      const tbl = document.querySelector('#tbl-yearly tbody');
+      tbl.innerHTML = trend.map(r => `<tr>
     <td>${r.Period}</td>
-    <td><span class="${r['Data Type']==='Proxy'?'badge-proxy':'badge-actual'}">${r['Data Type']}</span></td>
+    <td><span class="${r['Data Type'] === 'Proxy' ? 'badge-proxy' : 'badge-actual'}">${r['Data Type']}</span></td>
     <td>${fmt(r['Total Emissions (tCO2e)'])}</td>
     <td>${fmt(r['Scope 1'])}</td>
     <td>${fmt(r['Scope 2'])}</td>
-    <td>${fmt(r['Energy Usage (GJ)'],0)}</td>
+    <td>${fmt(r['Energy Usage (GJ)'], 0)}</td>
   </tr>`).join('');
 
-  if (trend.some(r => r['Data Type'] === 'Proxy'))
-    document.getElementById('proxy-note').style.display = 'block';
+      if (trend.some(r => r['Data Type'] === 'Proxy'))
+        document.getElementById('proxy-note').style.display = 'block';
 
-  destroyChart('chart-emissions');
-  destroyChart('chart-energy');
+      destroyChart('chart-emissions');
+      destroyChart('chart-energy');
 
-  if (trend.length) {
-    const labels = trend.map(r => r.Period);
-    chartInstances['chart-emissions'] = new Chart(document.getElementById('chart-emissions'), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Total', data: trend.map(r => r['Total Emissions (tCO2e)']), borderColor: PALETTE.dark, backgroundColor: PALETTE.dark, tension: .35, fill: false, pointRadius: 4 },
-          { label: 'Scope 1', data: trend.map(r => r['Scope 1']),  borderColor: PALETTE.accent, backgroundColor: PALETTE.accent, tension: .35, fill: false, pointRadius: 4 },
-          { label: 'Scope 2', data: trend.map(r => r['Scope 2']),  borderColor: PALETTE.olive, backgroundColor: PALETTE.olive, tension: .35, fill: false, pointRadius: 4 },
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
-          datalabels: {
-            align: 'top',
-            anchor: 'end',
-            color: PALETTE.text || '#1A1A1A',
-            formatter: (v) => fmt(v, 0),
-            font: { size: 10, weight: '600' }
-          }
-        }
-      }
-    });
-
-    chartInstances['chart-energy'] = new Chart(document.getElementById('chart-energy'), {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{ label: 'Energy (GJ)', data: trend.map(r => r['Energy Usage (GJ)']), backgroundColor: PALETTE.sand, borderRadius: 6 }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: false },
-          datalabels: {
-            anchor: 'end',
-            align: 'end',
-            color: '#1A1A1A',
-            formatter: (v) => fmt(v, 0),
-            font: { size: 10, weight: '600' }
-          }
-        }
-      }
-    });
-  }
-
-  // --- Scope analysis ---
-  const scope = data.scope_analysis || [];
-  document.querySelector('#tbl-scope tbody').innerHTML = scope.map(r =>
-    `<tr><td>${r.Scope}</td><td>${fmt(r['Total Emissions (tCO2e)'])}</td></tr>`
-  ).join('');
-
-  destroyChart('chart-scope');
-  if (scope.length) {
-    chartInstances['chart-scope'] = new Chart(document.getElementById('chart-scope'), {
-      type: 'doughnut',
-      data: {
-        labels: scope.map(r => r.Scope),
-        datasets: [{ data: scope.map(r => r['Total Emissions (tCO2e)']),
-          backgroundColor: [PALETTE.dark, PALETTE.olive, PALETTE.accent, PALETTE.warm, PALETTE.slate],
-          borderWidth: 2, borderColor: '#FAFAF7' }]
-      },
-      options: {
-        responsive: true,
-        cutout: '55%',
-        plugins: {
-          legend: { position: 'right', labels: { usePointStyle: true, padding: 14 } },
-          datalabels: {
-            color: '#1A1A1A',
-            formatter: (v, ctx) => {
-              const vals = ctx.chart.data.datasets[0].data || [];
-              const total = vals.reduce((a, b) => a + asNum(b), 0);
-              const pct = total ? (asNum(v) / total) * 100 : 0;
-              return `${fmt(v, 0)} (${fmt(pct, 1)}%)`;
-            },
-            font: { size: 10, weight: '600' }
-          }
-        }
-      }
-    });
-  }
-
-  // --- Energy mix ---
-  destroyChart('chart-mix');
-  chartInstances['chart-mix'] = new Chart(document.getElementById('chart-mix'), {
-    type: 'bar',
-    data: {
-      labels: ['Renewable', 'Non-Renewable'],
-      datasets: [{ data: [k.renewable_gj, k.non_renewable_gj],
-        backgroundColor: [PALETTE.olive, PALETTE.accent], borderRadius: 6 }]
-    },
-    options: {
-      responsive: true,
-      indexAxis: 'y',
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          anchor: 'end',
-          align: 'end',
-          color: '#1A1A1A',
-          formatter: (v, ctx) => {
-            const vals = ctx.chart.data.datasets[0].data || [];
-            const total = vals.reduce((a, b) => a + asNum(b), 0);
-            const pct = total ? (asNum(v) / total) * 100 : 0;
-            return `${fmt(v, 0)} (${fmt(pct, 1)}%)`;
+      if (trend.length) {
+        const labels = trend.map(r => r.Period);
+        chartInstances['chart-emissions'] = new Chart(document.getElementById('chart-emissions'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Total', data: trend.map(r => r['Total Emissions (tCO2e)']), borderColor: PALETTE.dark, backgroundColor: PALETTE.dark, tension: .35, fill: false, pointRadius: 4 },
+              { label: 'Scope 1', data: trend.map(r => r['Scope 1']), borderColor: PALETTE.accent, backgroundColor: PALETTE.accent, tension: .35, fill: false, pointRadius: 4 },
+              { label: 'Scope 2', data: trend.map(r => r['Scope 2']), borderColor: PALETTE.olive, backgroundColor: PALETTE.olive, tension: .35, fill: false, pointRadius: 4 },
+            ]
           },
-          font: { size: 10, weight: '600' }
-        }
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+              datalabels: {
+                align: 'top',
+                anchor: 'end',
+                color: PALETTE.text || '#1A1A1A',
+                formatter: (v) => fmt(v, 0),
+                font: { size: 10, weight: '600' }
+              }
+            }
+          }
+        });
+
+        chartInstances['chart-energy'] = new Chart(document.getElementById('chart-energy'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{ label: 'Energy (GJ)', data: trend.map(r => r['Energy Usage (GJ)']), backgroundColor: PALETTE.sand, borderRadius: 6 }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              datalabels: {
+                anchor: 'end',
+                align: 'end',
+                color: '#1A1A1A',
+                formatter: (v) => fmt(v, 0),
+                font: { size: 10, weight: '600' }
+              }
+            }
+          }
+        });
       }
-    }
-  });
 
-  const fuel = data.fuel_mix || [];
-  document.querySelector('#tbl-fuel tbody').innerHTML = fuel.map(r =>
-    `<tr><td>${r['Fuel / Electricity Type']}</td><td>${fmt(r['Energy Usage (GJ)'],1)}</td></tr>`
-  ).join('');
+      // --- Scope analysis ---
+      const scope = data.scope_analysis || [];
+      document.querySelector('#tbl-scope tbody').innerHTML = scope.map(r =>
+        `<tr><td>${r.Scope}</td><td>${fmt(r['Total Emissions (tCO2e)'])}</td></tr>`
+      ).join('');
 
-  // --- Renewable progression (year-wise) ---
-  const renTrend = calcRenewableProgression(data.audit_trail || []);
-  document.querySelector('#tbl-renewable-progression tbody').innerHTML = renTrend.map(r => `<tr>
+      destroyChart('chart-scope');
+      if (scope.length) {
+        chartInstances['chart-scope'] = new Chart(document.getElementById('chart-scope'), {
+          type: 'doughnut',
+          data: {
+            labels: scope.map(r => r.Scope),
+            datasets: [{
+              data: scope.map(r => r['Total Emissions (tCO2e)']),
+              backgroundColor: [PALETTE.dark, PALETTE.olive, PALETTE.accent, PALETTE.warm, PALETTE.slate],
+              borderWidth: 2, borderColor: '#FAFAF7'
+            }]
+          },
+          options: {
+            responsive: true,
+            cutout: '55%',
+            plugins: {
+              legend: { position: 'right', labels: { usePointStyle: true, padding: 14 } },
+              datalabels: {
+                color: '#1A1A1A',
+                formatter: (v, ctx) => {
+                  const vals = ctx.chart.data.datasets[0].data || [];
+                  const total = vals.reduce((a, b) => a + asNum(b), 0);
+                  const pct = total ? (asNum(v) / total) * 100 : 0;
+                  return `${fmt(v, 0)} (${fmt(pct, 1)}%)`;
+                },
+                font: { size: 10, weight: '600' }
+              }
+            }
+          }
+        });
+      }
+
+      // --- Energy mix ---
+      destroyChart('chart-mix');
+      chartInstances['chart-mix'] = new Chart(document.getElementById('chart-mix'), {
+        type: 'bar',
+        data: {
+          labels: ['Renewable', 'Non-Renewable'],
+          datasets: [{
+            data: [k.renewable_gj, k.non_renewable_gj],
+            backgroundColor: [PALETTE.olive, PALETTE.accent], borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              color: '#1A1A1A',
+              formatter: (v, ctx) => {
+                const vals = ctx.chart.data.datasets[0].data || [];
+                const total = vals.reduce((a, b) => a + asNum(b), 0);
+                const pct = total ? (asNum(v) / total) * 100 : 0;
+                return `${fmt(v, 0)} (${fmt(pct, 1)}%)`;
+              },
+              font: { size: 10, weight: '600' }
+            }
+          }
+        }
+      });
+
+      const fuel = data.fuel_mix || [];
+      document.querySelector('#tbl-fuel tbody').innerHTML = fuel.map(r =>
+        `<tr><td>${r['Fuel / Electricity Type']}</td><td>${fmt(r['Energy Usage (GJ)'], 1)}</td></tr>`
+      ).join('');
+
+      // --- Renewable progression (year-wise) ---
+      const renTrend = calcRenewableProgression(data.audit_trail || []);
+      document.querySelector('#tbl-renewable-progression tbody').innerHTML = renTrend.map(r => `<tr>
     <td>${r.Period}</td>
     <td>${fmtPct(r.renewable_energy_pct, 1)}</td>
     <td>${fmtPct(r.renewable_fuel_pct, 1)}</td>
     <td>${fmtPct(r.renewable_electricity_pct, 1)}</td>
   </tr>`).join('');
 
-  destroyChart('chart-renewable-progression');
-  if (renTrend.length) {
-    chartInstances['chart-renewable-progression'] = new Chart(document.getElementById('chart-renewable-progression'), {
-      type: 'line',
-      data: {
-        labels: renTrend.map(r => r.Period),
-        datasets: [
-          { label: 'Renewable Energy %', data: renTrend.map(r => r.renewable_energy_pct), borderColor: PALETTE.dark, backgroundColor: PALETTE.dark, tension: .35, pointRadius: 4, fill: false },
-          { label: 'Renewable Fuel %', data: renTrend.map(r => r.renewable_fuel_pct), borderColor: PALETTE.accent, backgroundColor: PALETTE.accent, tension: .35, pointRadius: 4, fill: false },
-          { label: 'Renewable Electricity %', data: renTrend.map(r => r.renewable_electricity_pct), borderColor: PALETTE.olive, backgroundColor: PALETTE.olive, tension: .35, pointRadius: 4, fill: false }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
-          datalabels: {
-            align: 'top',
-            anchor: 'end',
-            color: '#1A1A1A',
-            formatter: (v) => `${fmt(v, 1)}%`,
-            font: { size: 10, weight: '600' }
+      destroyChart('chart-renewable-progression');
+      if (renTrend.length) {
+        chartInstances['chart-renewable-progression'] = new Chart(document.getElementById('chart-renewable-progression'), {
+          type: 'line',
+          data: {
+            labels: renTrend.map(r => r.Period),
+            datasets: [
+              { label: 'Renewable Energy %', data: renTrend.map(r => r.renewable_energy_pct), borderColor: PALETTE.dark, backgroundColor: PALETTE.dark, tension: .35, pointRadius: 4, fill: false },
+              { label: 'Renewable Fuel %', data: renTrend.map(r => r.renewable_fuel_pct), borderColor: PALETTE.accent, backgroundColor: PALETTE.accent, tension: .35, pointRadius: 4, fill: false },
+              { label: 'Renewable Electricity %', data: renTrend.map(r => r.renewable_electricity_pct), borderColor: PALETTE.olive, backgroundColor: PALETTE.olive, tension: .35, pointRadius: 4, fill: false }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+              datalabels: {
+                align: 'top',
+                anchor: 'end',
+                color: '#1A1A1A',
+                formatter: (v) => `${fmt(v, 1)}%`,
+                font: { size: 10, weight: '600' }
+              }
+            },
+            scales: {
+              y: {
+                ticks: { callback: (v) => `${v}%` }
+              }
+            }
           }
-        },
-        scales: {
-          y: {
-            ticks: { callback: (v) => `${v}%` }
-          }
-        }
+        });
       }
-    });
-  }
 
-  // --- Audit trail ---
-  const audit = data.audit_trail || [];
-  if (audit.length) {
-    const cols = Object.keys(audit[0]);
-    document.getElementById('audit-head').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
-    document.getElementById('audit-body').innerHTML = audit.map(r =>
-      `<tr>${cols.map(c => `<td>${r[c] != null ? r[c] : ''}</td>`).join('')}</tr>`
-    ).join('');
-  }
+      // --- Audit trail ---
+      const audit = data.audit_trail || [];
+      if (audit.length) {
+        const cols = Object.keys(audit[0]);
+        document.getElementById('audit-head').innerHTML = cols.map(c => `<th>${c}</th>`).join('');
+        document.getElementById('audit-body').innerHTML = audit.map(r =>
+          `<tr>${cols.map(c => `<td>${r[c] != null ? r[c] : ''}</td>`).join('')}</tr>`
+        ).join('');
+      }
 
-  document.getElementById('results').style.display = 'block';
-}
+      document.getElementById('results').style.display = 'block';
+    }
 
-function card(label, value, delta=null, sub=false) {
-  return `<div class="card${sub?' sub':''}">
+    function card(label, value, delta = null, sub = false) {
+      return `<div class="card${sub ? ' sub' : ''}">
     <div class="label">${label}</div>
     <div class="value">${value}</div>
     ${delta ? `<div class="delta">${delta}</div>` : ''}
   </div>`;
-}
+    }
 
-function destroyChart(id) {
-  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
-}
+    function destroyChart(id) {
+      if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+    }
 
-// ---------- Tabs ----------
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-  });
-});
+    // ---------- Tabs ----------
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
 
-// ---------- Download ----------
-document.getElementById('download-btn').addEventListener('click', () => {
-  if (!excelB64) return;
-  const bytes = Uint8Array.from(atob(excelB64), c => c.charCodeAt(0));
-  const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'esg_audit.xlsx';
-  a.click();
-});
-</script>
+    // ---------- Download ----------
+    document.getElementById('download-btn').addEventListener('click', () => {
+      if (!excelB64) return;
+      const bytes = Uint8Array.from(atob(excelB64), c => c.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'esg_audit.xlsx';
+      a.click();
+    });
+  </script>
 </body>
+
 </html>
