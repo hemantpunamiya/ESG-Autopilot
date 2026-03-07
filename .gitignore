@@ -5,3 +5,5 @@ __pycache__/
 .claude/
 nul
 *.pyc
+.vercel
+.env*.local

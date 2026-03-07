@@ -829,7 +829,8 @@ def build_yearly_summary_with_proxy(rdf, proxy_years_if_single=2, decline=0.05):
     return out
 
 # --- Main Logic ---
-st.title("💎 ESG AutoPilot - Enterprise Dash")
+st.title("💎 ESG AutoPilot - GHG SCOPE 1 AND 2 EMISSIONS CALCULATOR")
+st.markdown("**INSTRUCTIONS:** DOWNLOAD TEMPLATE. ENTER THE YEAR AND DATA (CURRENTLY SUPPORTS ONLY ANNUAL DATA) AND GET YOUR EMISSIONS FILE VERIFIABLE EXCEL IMMEDIATELY WHICH IS AUDIT READY")
 key = st.sidebar.text_input("Gemini API Key", type="password")
 up_files = st.file_uploader("Upload Data Batch", type=['xlsx', 'xls', 'csv', 'pdf', 'png', 'jpg'], accept_multiple_files=True)
 

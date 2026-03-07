@@ -313,9 +313,12 @@
 </head>
 <body>
 
-<nav>
-  <span class="logo">ESG AutoPilot</span>
-  <span class="badge">Enterprise</span>
+<nav style="flex-direction: column; align-items: flex-start; justify-content: center; height: auto; padding: 12px 28px;">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <span class="logo">ESG AutoPilot</span>
+    <span class="badge">Enterprise</span>
+  </div>
+  <span style="font-size: 0.85rem; color: var(--text-mid); font-weight: 600; margin-top: 4px; letter-spacing: 0.02em;">GHG SCOPE 1 AND 2 EMISSIONS CALCULATOR</span>
 </nav>
 
 <div class="container">
@@ -323,12 +326,11 @@
   <!-- Upload Section -->
   <div id="upload-section">
     <!-- Template Download Banner -->
-    <div class="template-banner">
+    <div class="template-banner" style="align-items: center;">
       <div class="template-text">
         <span class="template-icon">📋</span>
         <div>
-          <strong>Need a data collection template?</strong>
-          <span class="template-sub">Download the standard ESG template, fill one per site, then upload all together.</span>
+          <strong style="text-transform: uppercase; font-size: 0.85rem; line-height: 1.4;">INSTRUCTIONS: DOWNLOAD TEMPLATE. ENTER THE YEAR AND DATA (CURRENTLY SUPPORTS ONLY ANNUAL DATA) AND GET YOUR EMISSIONS FILE VERIFIABLE EXCEL IMMEDIATELY WHICH IS AUDIT READY</strong>
         </div>
       </div>
       <button class="btn-template" onclick="window.location.href='/api/template'">
