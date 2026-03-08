@@ -11,47 +11,110 @@ import os
 
 STANDARD_COLUMNS = [
     "Period", "Location", "Site Type", "Scope", "Category",
-    "Fuel / Electricity Type", "Quantity", "Unit", "EF Original Unit",
+    "Fuel / Electricity Type", "Fuel Type", "Quantity", "Unit", "EF Original Unit",
     "Unit Adjusted EF", "Energy Usage (GJ)", "Total Emissions (kgCO2e)",
     "Total Emissions (tCO2e)", "Factor Source", "Methodology", "Validation Notes"
 ]
 
 EF_DATABASE = {
-    "Grid Electricity (kWh)":       {"factor": 0.71,    "ncv": 0.0036,  "unit": "kWh", "is_renewable": False, "source": "CEA India 2023",          "methodology": "Scope 2 - Grid Avg",                   "scope": "Scope 2",    "category": "Grid Electricity"},
-    "Renewable Electricity (kWh)":  {"factor": 0.0,     "ncv": 0.0036,  "unit": "kWh", "is_renewable": True,  "source": "Renewable",               "methodology": "Zero Emission",                         "scope": "Scope 2",    "category": "Renewable Energy"},
-    "Solar (kWh)":                  {"factor": 0.0,     "ncv": 0.0036,  "unit": "kWh", "is_renewable": True,  "source": "Renewable",               "methodology": "Zero Emission",                         "scope": "Scope 2",    "category": "Renewable Energy"},
-    "Wind (kWh)":                   {"factor": 0.0,     "ncv": 0.0036,  "unit": "kWh", "is_renewable": True,  "source": "Renewable",               "methodology": "Zero Emission",                         "scope": "Scope 2",    "category": "Renewable Energy"},
-    "Hydel (kWh)":                  {"factor": 0.0,     "ncv": 0.0036,  "unit": "kWh", "is_renewable": True,  "source": "Renewable",               "methodology": "Zero Emission",                         "scope": "Scope 2",    "category": "Renewable Energy"},
-    "HSD (KL)":                     {"factor": 2701.3,  "ncv": 36.335,  "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
-    "Furnace Oil (KL)":             {"factor": 3010.0,  "ncv": 38.784,  "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
-    "LDO (KL)":                     {"factor": 2749.3,  "ncv": 36.98,   "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
-    "Natural Gas (SCM)":            {"factor": 2.15,    "ncv": 0.0384,  "unit": "SCM", "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
-    "LPG (Kg)":                     {"factor": 2.987,   "ncv": 0.0473,  "unit": "kg",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
-    "LSHS (KL)":                    {"factor": 3042.7,  "ncv": 39.188,  "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
-    "HSD Mobile (KL)":              {"factor": 2734.9,  "ncv": 36.335,  "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Mobile Combustion",           "scope": "Scope 1",    "category": "Mobile Combustion"},
-    "Petrol (KL)":                  {"factor": 2341.9,  "ncv": 33.004,  "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Mobile Combustion",           "scope": "Scope 1",    "category": "Mobile Combustion"},
-    "Biofuel (KL)":                 {"factor": 1688.5,  "ncv": 23.76,   "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, Biogenic",     "methodology": "Biogenic - Reported Separately",        "scope": "Biogenic",   "category": "Biogenic Emissions"},
-    "Biodiesel (KL)":               {"factor": 1688.5,  "ncv": 23.76,   "unit": "KL",  "is_renewable": False, "source": "IPCC 2006, Biogenic",     "methodology": "Biogenic - Reported Separately",        "scope": "Biogenic",   "category": "Biogenic Emissions"},
-    "Briquettes (Kg)":              {"factor": 1.592,   "ncv": 0.0156,  "unit": "kg",  "is_renewable": False, "source": "IPCC 2006, Biogenic",     "methodology": "Biogenic - Reported Separately",        "scope": "Biogenic",   "category": "Biogenic Emissions"},
-    "R22 (kg)":                     {"factor": 1960.0,  "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R134a (kg)":                   {"factor": 1530.0,  "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R-407C (kg)":                  {"factor": 1908.0,  "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R-404A (kg)":                  {"factor": 4728.0,  "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R-410A (kg)":                  {"factor": 2255.0,  "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R-407A (kg)":                  {"factor": 2262.0,  "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R123 (kg)":                    {"factor": 79.0,    "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R32 (kg)":                     {"factor": 771.0,   "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "R152a (kg)":                   {"factor": 164.0,   "ncv": 0.0,     "unit": "kg",  "is_renewable": False, "source": "IPCC AR6",                "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Refrigerants"},
-    "Fire Extinguisher 1kg (nos)":    {"factor": 1.0,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 2kg (nos)":    {"factor": 2.0,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 2.5kg (nos)":  {"factor": 2.5,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 3kg (nos)":    {"factor": 3.0,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 3.5kg (nos)":  {"factor": 3.5,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 4.5kg (nos)":  {"factor": 4.5,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 6kg (nos)":    {"factor": 6.0,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 9kg (nos)":    {"factor": 9.0,   "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Fire Extinguisher 22.5kg (nos)": {"factor": 22.5,  "ncv": 0.0,     "unit": "nos", "is_renewable": False, "source": "CO2 Volume",              "methodology": "Scope 1 - Fugitive Emissions",          "scope": "Scope 1",    "category": "Fire Extinguishers"},
-    "Coal (Kg)":                      {"factor": 1.46,  "ncv": 0.015,   "unit": "kg",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs",     "methodology": "Scope 1 - Stationary Combustion",       "scope": "Scope 1",    "category": "Stationary Combustion"},
+    # Electricity (Scope 2)
+    "Grid Electricity (kWh)":      {"factor": 0.71,  "ncv": 0.0036, "unit": "kWh", "fuel_type": "Electricity",    "is_renewable": False, "source": "CEA India 2023",       "methodology": "Scope 2 - Grid Avg",              "scope": "Scope 2",  "category": "Grid Electricity"},
+    "Renewable Electricity (kWh)": {"factor": 0.0,   "ncv": 0.0036, "unit": "kWh", "fuel_type": "Electricity",    "is_renewable": True,  "source": "Renewable",            "methodology": "Zero Emission",                   "scope": "Scope 2",  "category": "Renewable Energy"},
+    "Solar (kWh)":                 {"factor": 0.0,   "ncv": 0.0036, "unit": "kWh", "fuel_type": "Electricity",    "is_renewable": True,  "source": "Renewable",            "methodology": "Zero Emission",                   "scope": "Scope 2",  "category": "Renewable Energy"},
+    "Wind (kWh)":                  {"factor": 0.0,   "ncv": 0.0036, "unit": "kWh", "fuel_type": "Electricity",    "is_renewable": True,  "source": "Renewable",            "methodology": "Zero Emission",                   "scope": "Scope 2",  "category": "Renewable Energy"},
+    "Hydel (kWh)":                 {"factor": 0.0,   "ncv": 0.0036, "unit": "kWh", "fuel_type": "Electricity",    "is_renewable": True,  "source": "Renewable",            "methodology": "Zero Emission",                   "scope": "Scope 2",  "category": "Renewable Energy"},
+    # Fuels - Stationary (IPCC 2006, AR5 GWPs)
+    "HSD (KL)":          {"factor": 2701.3,  "ncv": 36.335,  "unit": "KL",  "fuel_type": "Liquid",   "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "Furnace Oil (KL)":  {"factor": 3010.0,  "ncv": 38.784,  "unit": "KL",  "fuel_type": "Liquid",   "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "LDO (KL)":          {"factor": 2749.3,  "ncv": 36.98,   "unit": "KL",  "fuel_type": "Liquid",   "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "Natural Gas (SCM)": {"factor": 2.15,    "ncv": 0.0384,  "unit": "SCM", "fuel_type": "Gaseous",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "LPG (Kg)":          {"factor": 2.987,   "ncv": 0.0473,  "unit": "kg",  "fuel_type": "Gaseous",  "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "LSHS (KL)":         {"factor": 3042.7,  "ncv": 39.188,  "unit": "KL",  "fuel_type": "Liquid",   "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    "Coal (Kg)":         {"factor": 1.46,    "ncv": 0.015,   "unit": "kg",  "fuel_type": "Solid",    "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1", "category": "Stationary Combustion"},
+    # Fuels - Mobile (IPCC 2006, AR5 GWPs)
+    "HSD Mobile (KL)":   {"factor": 2734.9,  "ncv": 36.335,  "unit": "KL",  "fuel_type": "Liquid",   "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1", "category": "Mobile Combustion"},
+    "Petrol (KL)":       {"factor": 2341.9,  "ncv": 33.004,  "unit": "KL",  "fuel_type": "Liquid",   "is_renewable": False, "source": "IPCC 2006, AR5 GWPs", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1", "category": "Mobile Combustion"},
+    # Biogenic Fuels
+    "Biofuel (KL)":      {"factor": 1688.5,  "ncv": 23.76,   "unit": "KL",  "fuel_type": "Liquid Biofuel",  "is_renewable": False, "source": "IPCC 2006, Biogenic", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Biodiesel (KL)":    {"factor": 1688.5,  "ncv": 23.76,   "unit": "KL",  "fuel_type": "Liquid Biofuel",  "is_renewable": False, "source": "IPCC 2006, Biogenic", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Briquettes (Kg)":   {"factor": 1.592,   "ncv": 0.0156,  "unit": "kg",  "fuel_type": "Solid Biomass",   "is_renewable": False, "source": "IPCC 2006, Biogenic", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    # Refrigerants (AR6)
+    "R22 (kg)":    {"factor": 1960.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R134a (kg)":  {"factor": 1530.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-407C (kg)": {"factor": 1908.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-404A (kg)": {"factor": 4728.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-410A (kg)": {"factor": 2255.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-407A (kg)": {"factor": 2262.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R123 (kg)":   {"factor": 79.0,    "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R32 (kg)":    {"factor": 771.0,   "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R152a (kg)":  {"factor": 164.0,   "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR6", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    # Fire Extinguishers
+    "Fire Extinguisher 1kg (nos)":    {"factor": 1.0,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 2kg (nos)":    {"factor": 2.0,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 2.5kg (nos)":  {"factor": 2.5,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 3kg (nos)":    {"factor": 3.0,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 3.5kg (nos)":  {"factor": 3.5,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 4.5kg (nos)":  {"factor": 4.5,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 6kg (nos)":    {"factor": 6.0,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 9kg (nos)":    {"factor": 9.0,   "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+    "Fire Extinguisher 22.5kg (nos)": {"factor": 22.5,  "ncv": 0.0, "unit": "nos", "fuel_type": "Refrigerant", "is_renewable": False, "source": "CO2 Volume", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Fire Extinguishers"},
+
+    # --- Additional Fuels: IPCC AR6 / UK DESNZ 2024 ---
+    # Gaseous Fuels (L = litres; factors kgCO2e/L; NCV GJ/L)
+    "CNG (L)":                           {"factor": 0.44423, "ncv": 0.00884, "unit": "L",   "fuel_type": "Gaseous",         "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "LNG (L)":                           {"factor": 1.15623, "ncv": 0.02200, "unit": "L",   "fuel_type": "Gaseous",         "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "LPG (L)":                           {"factor": 1.55709, "ncv": 0.02540, "unit": "L",   "fuel_type": "Gaseous",         "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Natural Gas (m\u00b3)":             {"factor": 2.02135, "ncv": 0.03840, "unit": "m\u00b3", "fuel_type": "Gaseous",    "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Natural Gas 100% Mineral (m\u00b3)":{"factor": 2.03473, "ncv": 0.03840, "unit": "m\u00b3", "fuel_type": "Gaseous",    "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Other Petroleum Gas (L)":           {"factor": 0.94441, "ncv": 0.02500, "unit": "L",   "fuel_type": "Gaseous",         "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    # Liquid Fuels (L = litres; factors kgCO2e/L; NCV GJ/L)
+    "Aviation Spirit (L)":               {"factor": 2.33048, "ncv": 0.03470, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1",  "category": "Mobile Combustion"},
+    "Aviation Turbine Fuel (L)":         {"factor": 2.54514, "ncv": 0.03470, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1",  "category": "Mobile Combustion"},
+    "Burning Oil (L)":                   {"factor": 2.54014, "ncv": 0.03470, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Diesel Average Biofuel Blend (L)":  {"factor": 2.51233, "ncv": 0.03590, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1",  "category": "Mobile Combustion"},
+    "Diesel 100% Mineral (L)":           {"factor": 2.70553, "ncv": 0.03590, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1",  "category": "Mobile Combustion"},
+    "Fuel Oil (L)":                      {"factor": 3.17522, "ncv": 0.03870, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Gas Oil (L)":                       {"factor": 2.75857, "ncv": 0.03730, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Lubricants (L)":                    {"factor": 2.74972, "ncv": 0.03670, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Naphtha (L)":                       {"factor": 2.11926, "ncv": 0.03390, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Petrol Average Biofuel Blend (L)":  {"factor": 2.19352, "ncv": 0.03300, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1",  "category": "Mobile Combustion"},
+    "Petrol 100% Mineral (L)":           {"factor": 2.33969, "ncv": 0.03300, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Mobile Combustion",     "scope": "Scope 1",  "category": "Mobile Combustion"},
+    "Processed Fuel Oil Residual (L)":   {"factor": 3.17522, "ncv": 0.03870, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Processed Fuel Oil Distillate (L)": {"factor": 2.75857, "ncv": 0.03730, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Waste Oils (L)":                    {"factor": 2.75368, "ncv": 0.03670, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Marine Gas Oil (L)":                {"factor": 2.77539, "ncv": 0.03730, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Marine Fuel Oil (L)":               {"factor": 3.10669, "ncv": 0.03870, "unit": "L",   "fuel_type": "Liquid",          "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    # Solid Fuels (t = metric tonne; factors kgCO2e/t; NCV GJ/t)
+    "Coal Industrial (t)":               {"factor": 2403.84, "ncv": 25.80, "unit": "t",   "fuel_type": "Solid",           "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Coal Electricity Generation (t)":   {"factor": 2252.34, "ncv": 25.80, "unit": "t",   "fuel_type": "Solid",           "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Coal Domestic (t)":                 {"factor": 2883.26, "ncv": 25.80, "unit": "t",   "fuel_type": "Solid",           "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Coking Coal (t)":                   {"factor": 3165.24, "ncv": 28.20, "unit": "t",   "fuel_type": "Solid",           "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Petroleum Coke (t)":                {"factor": 3386.86, "ncv": 32.50, "unit": "t",   "fuel_type": "Solid",           "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    "Coal Electricity Home Produced (t)":{"factor": 2248.82, "ncv": 25.80, "unit": "t",   "fuel_type": "Solid",           "is_renewable": False, "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Scope 1 - Stationary Combustion", "scope": "Scope 1",  "category": "Stationary Combustion"},
+    # Bioenergy - Liquid Biofuels (L = litres; factors kgCO2e/L; NCV GJ/L)
+    "Bioethanol (L)":                    {"factor": 0.00901, "ncv": 0.02120, "unit": "L",  "fuel_type": "Liquid Biofuel",  "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Biodiesel ME (L)":                  {"factor": 0.16751, "ncv": 0.03280, "unit": "L",  "fuel_type": "Liquid Biofuel",  "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Biodiesel ME Used Cooking Oil (L)": {"factor": 0.16751, "ncv": 0.03280, "unit": "L",  "fuel_type": "Liquid Biofuel",  "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Biodiesel ME Tallow (L)":           {"factor": 0.16751, "ncv": 0.03280, "unit": "L",  "fuel_type": "Liquid Biofuel",  "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    # Bioenergy - Solid Biomass (t = metric tonne; factors kgCO2e/t; NCV GJ/t)
+    "Wood Logs (t)":                     {"factor": 61.81736,"ncv": 15.60, "unit": "t",   "fuel_type": "Solid Biomass",   "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Wood Chips (t)":                    {"factor": 57.15269,"ncv": 11.60, "unit": "t",   "fuel_type": "Solid Biomass",   "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Wood Pellets (t)":                  {"factor": 72.61754,"ncv": 17.00, "unit": "t",   "fuel_type": "Solid Biomass",   "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Grass Straw (t)":                   {"factor": 49.23656,"ncv": 14.50, "unit": "t",   "fuel_type": "Solid Biomass",   "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    # Bioenergy - Biogas (t = metric tonne; factors kgCO2e/t; NCV GJ/t)
+    "Biogas (t)":                        {"factor": 1.21518, "ncv": 17.50, "unit": "t",   "fuel_type": "Gaseous Biofuel", "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    "Landfill Gas (t)":                  {"factor": 0.68793, "ncv": 16.00, "unit": "t",   "fuel_type": "Gaseous Biofuel", "is_renewable": True,  "source": "IPCC AR6, UK DESNZ 2024", "methodology": "Biogenic - Reported Separately", "scope": "Biogenic", "category": "Biogenic Emissions"},
+    # Additional Refrigerants (GWP from IPCC AR5)
+    "SF6 (kg)":      {"factor": 22800.0, "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "HFC-23 (kg)":   {"factor": 14800.0, "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "HFC-125 (kg)":  {"factor": 3500.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "HFC-143a (kg)": {"factor": 4470.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "HFC-227ea (kg)":{"factor": 3220.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "HFC-236fa (kg)":{"factor": 9810.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-507A (kg)":   {"factor": 3985.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-508B (kg)":   {"factor": 13396.0, "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-407F (kg)":   {"factor": 1825.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
+    "R-408A (kg)":   {"factor": 3152.0,  "ncv": 0.0, "unit": "kg", "fuel_type": "Refrigerant", "is_renewable": False, "source": "IPCC AR5", "methodology": "Scope 1 - Fugitive Emissions", "scope": "Scope 1", "category": "Refrigerants"},
 }
 
 FUEL_MAPPING = {
@@ -79,6 +142,46 @@ FUEL_MAPPING = {
     "sub-bituminous coal": "Coal (Kg)",
     "hsd (mobile)": "HSD Mobile (KL)",
     "hsd mobile": "HSD Mobile (KL)",
+    # Additional fuels (IPCC AR6 / UK DESNZ)
+    "cng": "CNG (L)", "compressed natural gas": "CNG (L)",
+    "lng": "LNG (L)", "liquefied natural gas": "LNG (L)",
+    "lpg litre": "LPG (L)", "lpg l": "LPG (L)",
+    "aviation spirit": "Aviation Spirit (L)", "avgas": "Aviation Spirit (L)",
+    "aviation turbine": "Aviation Turbine Fuel (L)", "avtur": "Aviation Turbine Fuel (L)", "jet fuel": "Aviation Turbine Fuel (L)", "atf": "Aviation Turbine Fuel (L)",
+    "burning oil": "Burning Oil (L)", "kerosene": "Burning Oil (L)",
+    "diesel biofuel blend": "Diesel Average Biofuel Blend (L)",
+    "diesel mineral": "Diesel 100% Mineral (L)",
+    "fuel oil": "Fuel Oil (L)",
+    "gas oil": "Gas Oil (L)",
+    "lubricant": "Lubricants (L)",
+    "naphtha": "Naphtha (L)",
+    "petrol biofuel blend": "Petrol Average Biofuel Blend (L)",
+    "petrol mineral": "Petrol 100% Mineral (L)",
+    "marine gas oil": "Marine Gas Oil (L)", "mgo": "Marine Gas Oil (L)",
+    "marine fuel oil": "Marine Fuel Oil (L)", "hfo": "Marine Fuel Oil (L)",
+    "waste oil": "Waste Oils (L)",
+    "other petroleum gas": "Other Petroleum Gas (L)",
+    "coal industrial": "Coal Industrial (t)",
+    "coal electricity": "Coal Electricity Generation (t)",
+    "coal domestic": "Coal Domestic (t)",
+    "coking coal": "Coking Coal (t)",
+    "petroleum coke": "Petroleum Coke (t)",
+    "bioethanol": "Bioethanol (L)", "ethanol": "Bioethanol (L)",
+    "biodiesel me used cooking oil": "Biodiesel ME Used Cooking Oil (L)",
+    "biodiesel me tallow": "Biodiesel ME Tallow (L)",
+    "biodiesel me": "Biodiesel ME (L)",
+    "wood log": "Wood Logs (t)", "wood chip": "Wood Chips (t)",
+    "wood pellet": "Wood Pellets (t)",
+    "grass straw": "Grass Straw (t)", "grass": "Grass Straw (t)", "straw": "Grass Straw (t)",
+    "biogas": "Biogas (t)", "landfill gas": "Landfill Gas (t)",
+    "sf6": "SF6 (kg)", "sulphur hexafluoride": "SF6 (kg)",
+    "hfc-23": "HFC-23 (kg)", "hfc23": "HFC-23 (kg)",
+    "hfc-125": "HFC-125 (kg)", "hfc125": "HFC-125 (kg)",
+    "hfc-143a": "HFC-143a (kg)", "hfc143a": "HFC-143a (kg)",
+    "hfc-227ea": "HFC-227ea (kg)", "r507a": "R-507A (kg)", "r-507a": "R-507A (kg)",
+    "r508b": "R-508B (kg)", "r-508b": "R-508B (kg)",
+    "r407f": "R-407F (kg)", "r-407f": "R-407F (kg)",
+    "r408a": "R-408A (kg)", "r-408a": "R-408A (kg)",
     "fire extinguisher refilled: 1 kg":    "Fire Extinguisher 1kg (nos)",
     "fire extinguisher refilled: 2 kg":    "Fire Extinguisher 2kg (nos)",
     "fire extinguisher refilled: 2.5 kg":  "Fire Extinguisher 2.5kg (nos)",
@@ -582,6 +685,7 @@ def process_standard_row(f_type, qty, period="", loc="Unknown", u_in="N/A", ef_o
         "Scope": ef.get('scope', 'N/A'),
         "Category": ef.get('category', 'N/A'),
         "Fuel / Electricity Type": f_type,
+        "Fuel Type": ef.get('fuel_type', 'N/A'),
         "Quantity": q_val,
         "Unit": u_in if u_in != "N/A" else ef.get('unit', 'N/A'),
         "EF Original Unit": ef.get('unit', 'N/A'),
@@ -608,6 +712,8 @@ def energy_gj_from_row(row):
         return qty * 3.6
     if unit in ["kwh", "unit"]:
         return qty * 0.0036
+    if unit in ["l", "ltr", "litre", "liter"] and ef_unit == "l":
+        return qty * ncv
     if unit in ["l", "ltr", "litre", "liter"] and ef_unit == "kl":
         return qty * 0.001 * ncv
     if unit == "kl" and ef_unit == "kl":
@@ -615,6 +721,10 @@ def energy_gj_from_row(row):
     if unit in ["kg", "kilogram"] and ef_unit == "kg":
         return qty * ncv
     if unit == "scm" and ef_unit == "scm":
+        return qty * ncv
+    if unit in ["m3", "m\u00b3", "cubic metres", "cubic meter", "nm3"] and ef_unit == "m\u00b3":
+        return qty * ncv
+    if unit in ["t", "tonne", "tonnes", "mt", "ton", "tons"] and ef_unit == "t":
         return qty * ncv
     return safe_float(row.get("Energy Usage (GJ)", 0.0))
 
@@ -1067,8 +1177,14 @@ def generate_template():
     # ===== Scope 1 Stationary Combustion =====
     ws1 = wb.create_sheet("Scope 1 Stationary Combustion")
     ws1.sheet_properties.tabColor = "F59E0B"
-    fuels_stat = ["HSD (KL)", "Furnace Oil (KL)", "LDO (KL)",
-                  "Natural Gas (SCM)", "LPG (Kg)", "LSHS (KL)"]
+    fuels_stat = [
+        "HSD (KL)", "Furnace Oil (KL)", "LDO (KL)", "Natural Gas (SCM)", "LPG (Kg)", "LSHS (KL)",
+        "CNG (L)", "LNG (L)", "LPG (L)", "Natural Gas (m\u00b3)", "Other Petroleum Gas (L)",
+        "Fuel Oil (L)", "Gas Oil (L)", "Burning Oil (L)", "Lubricants (L)", "Naphtha (L)",
+        "Marine Gas Oil (L)", "Marine Fuel Oil (L)",
+        "Coal Industrial (t)", "Coal Electricity Generation (t)", "Coal Domestic (t)",
+        "Coking Coal (t)", "Petroleum Coke (t)",
+    ]
 
     row = 1
     style_header(ws1, row, 1, "Location / Plant")
@@ -1096,7 +1212,13 @@ def generate_template():
     # ===== Scope 1 Mobile Combustion =====
     ws2 = wb.create_sheet("Scope 1 Mobile Combustion")
     ws2.sheet_properties.tabColor = "EF4444"
-    fuels_mob = ["HSD (KL)", "Petrol (KL)"]
+    fuels_mob = [
+        "HSD (KL)", "Petrol (KL)",
+        "Diesel 100% Mineral (L)", "Diesel Average Biofuel Blend (L)",
+        "Petrol 100% Mineral (L)", "Petrol Average Biofuel Blend (L)",
+        "Aviation Spirit (L)", "Aviation Turbine Fuel (L)",
+        "Waste Oils (L)",
+    ]
 
     row = 1
     style_header(ws2, row, 1, "Location / Plant")
@@ -1126,8 +1248,13 @@ def generate_template():
     ws3.sheet_properties.tabColor = "8B5CF6"
 
     # Refrigerants section
-    refrigerants = ["R22 (kg)", "R134a (kg)", "R-407C (kg)", "R-404A (kg)",
-                    "R-410A (kg)", "R-407A (kg)", "R123 (kg)", "R32 (kg)", "R152a (kg)"]
+    refrigerants = [
+        "R22 (kg)", "R134a (kg)", "R-407C (kg)", "R-404A (kg)",
+        "R-410A (kg)", "R-407A (kg)", "R123 (kg)", "R32 (kg)", "R152a (kg)",
+        "SF6 (kg)", "HFC-23 (kg)", "HFC-125 (kg)", "HFC-143a (kg)",
+        "HFC-227ea (kg)", "HFC-236fa (kg)", "R-507A (kg)", "R-508B (kg)",
+        "R-407F (kg)", "R-408A (kg)",
+    ]
     fire_ext = ["1 Kg (nos)", "2 Kg (nos)", "2.5 Kg (nos)", "3 Kg (nos)",
                 "3.5 Kg (nos)", "4.5 Kg (nos)", "6 Kg (nos)", "9 Kg (nos)", "22.5 Kg (nos)"]
 
@@ -1212,6 +1339,45 @@ def generate_template():
              value="Enter values in kWh. The 'kWh' column is total "
                    "consumption; NRE + RE should equal kWh.").font = note_font
     auto_width(ws4)
+
+    # ===== Bioenergy =====
+    ws5 = wb.create_sheet("Bioenergy")
+    ws5.sheet_properties.tabColor = "10B981"
+
+    bioenergy_fuels = [
+        "Bioethanol (L)", "Biodiesel ME (L)", "Biodiesel ME Used Cooking Oil (L)", "Biodiesel ME Tallow (L)",
+        "Wood Logs (t)", "Wood Chips (t)", "Wood Pellets (t)", "Grass Straw (t)",
+        "Biogas (t)", "Landfill Gas (t)",
+    ]
+
+    row = 1
+    style_header(ws5, row, 1, "Location / Plant")
+    col = 2
+    for fy in periods:
+        style_header(ws5, row, col, fy, period_fill, period_font)
+        ws5.merge_cells(start_row=row, start_column=col,
+                        end_row=row, end_column=col + len(bioenergy_fuels) - 1)
+        col += len(bioenergy_fuels)
+
+    row = 2
+    style_header(ws5, row, 1, "")
+    col = 2
+    for _ in periods:
+        for fuel in bioenergy_fuels:
+            style_header(ws5, row, col, fuel, sub_fill, sub_font)
+            col += 1
+
+    add_sample_locations(ws5, 3, 1, 5)
+    for r in range(3, 8):
+        for c in range(2, 2 + len(periods) * len(bioenergy_fuels)):
+            style_cell(ws5, r, c, fmt="#,##0.000")
+
+    bio_note_row = 9
+    ws5.cell(row=bio_note_row, column=1,
+             value="Bioenergy units: Liquid biofuels in Litres (L); "
+                   "Biomass in Tonnes (t); Biogas in Tonnes (t). "
+                   "Biogenic emissions are reported separately per GHG Protocol.").font = note_font
+    auto_width(ws5)
 
     # Save to buffer
     buf = io.BytesIO()
