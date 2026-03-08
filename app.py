@@ -1010,7 +1010,7 @@ if up_files:
         st.markdown(
             f"""
             <div class="hero">
-                <h2>ESG Performance Dashboard</h2>
+                <h2>Emissions Dashboard</h2>
                 <p>Latest reporting period: <b>{latest_p}</b></p>
             </div>
             """,
