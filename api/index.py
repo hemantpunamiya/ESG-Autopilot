@@ -165,6 +165,22 @@ def _do_process():
         .to_dict(orient="records")
     )
 
+    region_analysis = (
+        mdf.groupby("Location", as_index=False).agg({
+            "Total Emissions (tCO2e)": "sum",
+            "Energy Usage (GJ)": "sum"
+        })
+    )
+    
+    # Add Scope 1 and Scope 2 columns to regional analysis
+    s1_reg = mdf[mdf["Scope"] == "Scope 1"].groupby("Location")["Total Emissions (tCO2e)"].sum()
+    s2_reg = mdf[mdf["Scope"] == "Scope 2"].groupby("Location")["Total Emissions (tCO2e)"].sum()
+    
+    region_analysis["Scope 1"] = region_analysis["Location"].map(s1_reg).fillna(0)
+    region_analysis["Scope 2"] = region_analysis["Location"].map(s2_reg).fillna(0)
+    
+    region_data = region_analysis.sort_values("Total Emissions (tCO2e)", ascending=False).to_dict(orient="records")
+
     audit_records = rdf.to_dict(orient="records")
 
     buf = io.BytesIO()
@@ -193,6 +209,7 @@ def _do_process():
         "yearly_trend": yearly_data,
         "scope_analysis": scope_data,
         "fuel_mix": fuel_mix,
+        "region_analysis": region_data,
         "audit_trail": audit_records,
         "excel_b64": excel_b64,
     })

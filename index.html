@@ -720,6 +720,7 @@
           <button class="tab-btn active" data-tab="highlights">Highlights</button>
           <button class="tab-btn" data-tab="trends">Year-wise Trends</button>
           <button class="tab-btn" data-tab="scope">Scope Analysis</button>
+          <button class="tab-btn" data-tab="region">Region-wise Analysis</button>
           <button class="tab-btn" data-tab="energy">Energy Mix</button>
           <button class="tab-btn" data-tab="renewable">Renewable Progression</button>
           <button class="tab-btn" data-tab="audit">Audit Trail</button>
@@ -784,6 +785,31 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Regionwise Analysis -->
+      <div class="tab-panel" id="tab-region">
+        <div class="chart-wrap">
+          <h4>Emissions by Region (tCO2e)</h4>
+          <canvas id="chart-region"></canvas>
+        </div>
+        <div class="tbl-wrap">
+          <h4>Regional Breakdown Summary</h4>
+          <div class="audit-scroll">
+            <table id="tbl-region">
+              <thead>
+                <tr>
+                  <th>Location</th>
+                  <th>Total Emissions (tCO2e)</th>
+                  <th>Scope 1</th>
+                  <th>Scope 2</th>
+                  <th>Energy Usage (GJ)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1246,6 +1272,48 @@
             scales: {
               y: {
                 ticks: { callback: (v) => `${v}%` }
+              }
+            }
+          }
+        });
+      }
+
+      // --- Regionwise Analysis ---
+      const regData = data.region_analysis || [];
+      document.querySelector('#tbl-region tbody').innerHTML = regData.map(r => `<tr>
+    <td>${r.Location}</td>
+    <td>${fmt(r['Total Emissions (tCO2e)'])}</td>
+    <td>${fmt(r['Scope 1'])}</td>
+    <td>${fmt(r['Scope 2'])}</td>
+    <td>${fmt(r['Energy Usage (GJ)'], 0)}</td>
+  </tr>`).join('');
+
+      destroyChart('chart-region');
+      if (regData.length) {
+        chartInstances['chart-region'] = new Chart(document.getElementById('chart-region'), {
+          type: 'bar',
+          data: {
+            labels: regData.map(r => r.Location),
+            datasets: [
+              { label: 'Scope 1', data: regData.map(r => r['Scope 1']), backgroundColor: PALETTE.accent, borderRadius: 4 },
+              { label: 'Scope 2', data: regData.map(r => r['Scope 2']), backgroundColor: PALETTE.olive, borderRadius: 4 }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              x: { stacked: true },
+              y: { stacked: true }
+            },
+            plugins: {
+              legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } },
+              datalabels: {
+                color: '#1A1A1A',
+                formatter: (v, ctx) => {
+                  if (v === 0) return '';
+                  return fmt(v, 0);
+                },
+                font: { size: 10, weight: '600' }
               }
             }
           }
