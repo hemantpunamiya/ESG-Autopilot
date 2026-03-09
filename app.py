@@ -502,6 +502,20 @@ def split_sheet_into_tables(df):
     sub_dfs = [group_df for _, group_df in df[~mask].groupby(groups[~mask]) if len(group_df) > 1]
     return sub_dfs if sub_dfs else ([df[~mask]] if len(df[~mask]) > 1 else [])
 
+def _classify_electricity_header_token(value):
+    text = str(value).strip().lower()
+    if not text or text in {"nan", "none"}:
+        return None
+    compact = re.sub(r"\s+", " ", text)
+    if "kwh" in compact:
+        return "kwh"
+    if re.search(r"(?<![a-z0-9])(nre|non[-\s]*renewable)(?![a-z0-9])", compact):
+        return "nre"
+    if re.search(r"(?<![a-z0-9])(re|renewable|solar|wind|hydel|hydro|ppa|open access|rooftop)(?![a-z0-9])", compact):
+        return "re"
+    return None
+
+
 def process_electricity_sheet(raw_df, default_period=""):
     """Special parser for electricity sheets containing multi-year NRE/RE blocks."""
     rows = []
@@ -521,9 +535,10 @@ def process_electricity_sheet(raw_df, default_period=""):
         return True
 
     for r in range(len(df)):
-        row_vals = [str(v).strip().lower() if pd.notna(v) else "" for v in df.iloc[r].tolist()]
-        has_nre = "nre" in row_vals
-        has_re = "re" in row_vals
+        raw_row_vals = df.iloc[r].tolist()
+        token_labels = [_classify_electricity_header_token(v) for v in raw_row_vals]
+        has_nre = "nre" in token_labels
+        has_re = "re" in token_labels
         if not (has_nre and has_re):
             continue
 
@@ -532,26 +547,32 @@ def process_electricity_sheet(raw_df, default_period=""):
         year_vals = [str(v) if pd.notna(v) else "" for v in df.iloc[year_row_idx].tolist()]
 
         # Detect repeated groups where NRE/RE appear.
-        for c in range(len(row_vals)):
-            token = row_vals[c]
+        for c in range(len(token_labels)):
+            token = token_labels[c]
             if token not in ["kwh", "nre"]:
+                continue
+            if token == "nre" and c - 1 >= 0 and token_labels[c - 1] == "kwh":
                 continue
 
             if token == "kwh":
-                nre_col = c + 1 if c + 1 < len(row_vals) and row_vals[c + 1] == "nre" else None
-                re_col = c + 2 if c + 2 < len(row_vals) and row_vals[c + 2] == "re" else None
+                nre_col = c + 1 if c + 1 < len(token_labels) and token_labels[c + 1] == "nre" else None
+                re_col = c + 2 if c + 2 < len(token_labels) and token_labels[c + 2] == "re" else None
                 site_col = c - 1
             else:
                 nre_col = c
-                re_col = c + 1 if c + 1 < len(row_vals) and row_vals[c + 1] == "re" else None
-                site_col = c - 1
+                re_col = c + 1 if c + 1 < len(token_labels) and token_labels[c + 1] == "re" else None
+                site_col = c - 2 if c - 1 >= 0 and token_labels[c - 1] == "kwh" else c - 1
 
             if nre_col is None:
                 continue
+            re_fuel_type = (
+                map_fuel_name(raw_row_vals[re_col], default="Renewable Electricity (kWh)")
+                if re_col is not None else "Renewable Electricity (kWh)"
+            )
 
             period = ""
             for cc in [nre_col, nre_col - 1, nre_col + 1, nre_col - 2, nre_col + 2]:
-                if 0 <= cc < len(year_vals):
+                if 0 <= cc < len(year_vals) and not period:
                     period = extract_period_metadata(year_vals[cc]) or period
             period = period or default_period
 
@@ -563,7 +584,17 @@ def process_electricity_sheet(raw_df, default_period=""):
                 if any(k in first_txt for k in ["total", "energy gj", "emissions", "re %", "scope 2 -"]):
                     break
 
-                site_val = df.iloc[rr, site_col] if 0 <= site_col < df.shape[1] and pd.notna(df.iloc[rr, site_col]) else df.iloc[rr, location_fallback_col]
+                site_candidate = (
+                    df.iloc[rr, site_col]
+                    if 0 <= site_col < df.shape[1] and pd.notna(df.iloc[rr, site_col])
+                    else None
+                )
+                candidate_text = str(site_candidate).strip()
+                site_val = (
+                    site_candidate
+                    if is_activity_location(site_candidate) and re.search(r"[A-Za-z]", candidate_text)
+                    else df.iloc[rr, location_fallback_col]
+                )
                 site = str(site_val).strip()
                 if not is_activity_location(site) or not _is_valid_site_label(site):
                     continue
@@ -574,7 +605,7 @@ def process_electricity_sheet(raw_df, default_period=""):
                 if nre_qty > 0 and is_valid_reporting_period(period):
                     rows.append(process_standard_row("Grid Electricity (kWh)", nre_qty, period, site, "kWh"))
                 if re_qty > 0 and is_valid_reporting_period(period):
-                    rows.append(process_standard_row("Renewable Electricity (kWh)", re_qty, period, site, "kWh"))
+                    rows.append(process_standard_row(re_fuel_type, re_qty, period, site, "kWh"))
 
     # Deduplicate rows created from overlapping group detection.
     if not rows:
