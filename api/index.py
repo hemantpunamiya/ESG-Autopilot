@@ -110,6 +110,27 @@ def _do_process():
         flagged = rdf[rdf["Validation Notes"].fillna("OK") != "OK"]
         if not flagged.empty:
             warnings.append(f"Validation flags found in {len(flagged)} row(s). See 'Validation Notes' in audit trail.")
+
+    def calc_avoided(row):
+        f = str(row.get("Fuel / Electricity Type", ""))
+        q = safe_float(row.get("Quantity", 0))
+        g = safe_float(row.get("Energy Usage (GJ)", 0))
+        # 1. Renewable Electricity
+        if f in RENEWABLE_ELEC_TYPES:
+            return (q * 0.71) / 1000.0
+        # 2. Biogenic Fuels
+        if "Biodiesel" in f:
+            return (q * 2.68) / 1000.0 if " (L)" in f or "(L)" in f else (q * 2680.0) / 1000.0
+        if "Bioethanol" in f:
+            return (q * 2.31) / 1000.0
+        if "Wood" in f or "Briquettes" in f:
+            return (g * 97.33) / 1000.0
+        if "Biogas" in f or "Landfill Gas" in f:
+            return (g * 55.99) / 1000.0
+        return 0.0
+
+    rdf["Avoided Emissions (tCO2e)"] = rdf.apply(calc_avoided, axis=1)
+
     yearly = build_yearly_summary_with_proxy(rdf)
 
     if not yearly.empty:
@@ -158,26 +179,6 @@ def _do_process():
         .to_dict(orient="records")
     )
 
-    def calc_avoided(row):
-        f = str(row.get("Fuel / Electricity Type", ""))
-        q = safe_float(row.get("Quantity", 0))
-        g = safe_float(row.get("Energy Usage (GJ)", 0))
-        # 1. Renewable Electricity
-        if f in RENEWABLE_ELEC_TYPES:
-            return (q * 0.71) / 1000.0
-        # 2. Biogenic Fuels
-        if "Biodiesel" in f:
-            return (q * 2.68) / 1000.0 if " (L)" in f or "(L)" in f else (q * 2680.0) / 1000.0
-        if "Bioethanol" in f:
-            return (q * 2.31) / 1000.0
-        if "Wood" in f or "Briquettes" in f:
-            return (g * 97.33) / 1000.0
-        if "Biogas" in f or "Landfill Gas" in f:
-            return (g * 55.99) / 1000.0
-        return 0.0
-
-    rdf["Avoided Emissions (tCO2e)"] = rdf.apply(calc_avoided, axis=1)
-    
     fuel_mix = (
         mdf.groupby("Fuel / Electricity Type", as_index=False)["Energy Usage (GJ)"].sum()
         .sort_values("Energy Usage (GJ)", ascending=False)
