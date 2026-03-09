@@ -158,6 +158,26 @@ def _do_process():
         .to_dict(orient="records")
     )
 
+    def calc_avoided(row):
+        f = str(row.get("Fuel / Electricity Type", ""))
+        q = safe_float(row.get("Quantity", 0))
+        g = safe_float(row.get("Energy Usage (GJ)", 0))
+        # 1. Renewable Electricity
+        if f in RENEWABLE_ELEC_TYPES:
+            return (q * 0.71) / 1000.0
+        # 2. Biogenic Fuels
+        if "Biodiesel" in f:
+            return (q * 2.68) / 1000.0 if " (L)" in f or "(L)" in f else (q * 2680.0) / 1000.0
+        if "Bioethanol" in f:
+            return (q * 2.31) / 1000.0
+        if "Wood" in f or "Briquettes" in f:
+            return (g * 97.33) / 1000.0
+        if "Biogas" in f or "Landfill Gas" in f:
+            return (g * 55.99) / 1000.0
+        return 0.0
+
+    rdf["Avoided Emissions (tCO2e)"] = rdf.apply(calc_avoided, axis=1)
+    
     fuel_mix = (
         mdf.groupby("Fuel / Electricity Type", as_index=False)["Energy Usage (GJ)"].sum()
         .sort_values("Energy Usage (GJ)", ascending=False)
@@ -168,7 +188,8 @@ def _do_process():
     region_analysis = (
         mdf.groupby("Location", as_index=False).agg({
             "Total Emissions (tCO2e)": "sum",
-            "Energy Usage (GJ)": "sum"
+            "Energy Usage (GJ)": "sum",
+            "Avoided Emissions (tCO2e)": "sum"
         })
     )
     
@@ -180,6 +201,9 @@ def _do_process():
     region_analysis["Scope 2"] = region_analysis["Location"].map(s2_reg).fillna(0)
     
     region_data = region_analysis.sort_values("Total Emissions (tCO2e)", ascending=False).to_dict(orient="records")
+
+    total_avoided = mdf["Avoided Emissions (tCO2e)"].sum()
+    green_pct = pct(total_avoided, total_em + total_avoided)
 
     audit_records = rdf.to_dict(orient="records")
 
@@ -201,6 +225,8 @@ def _do_process():
             "renewable_energy_pct": pct(renewable_gj, total_gj),
             "renewable_fuel_pct": pct(ren_fuel_gj, ren_fuel_base),
             "renewable_electricity_pct": pct(ren_elec_gj, ren_elec_base),
+            "total_avoided": round(float(total_avoided), 2),
+            "green_pct": green_pct,
             "delta_total": round(float(latest_row["Total Emissions (tCO2e)"] - prev_row["Total Emissions (tCO2e)"]), 2)
                            if (latest_row is not None and prev_row is not None) else None,
             "delta_energy": round(float(latest_row["Energy Usage (GJ)"] - prev_row["Energy Usage (GJ)"]), 0)
